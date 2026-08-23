@@ -1,19 +1,21 @@
-// Telegram init
-function initTelegramUser() {
-    const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        document.querySelector('.profile-name').textContent = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        document.querySelector('.profile-id').textContent = 'Telegram ID: @' + (user.username || user.id);
-        document.querySelector('.avatar').textContent = user.first_name.charAt(0).toUpperCase();
-    }
-    tg.ready();
-    tg.expand();
-}
-window.addEventListener('load', initTelegramUser);
+// Firebase configuration - apni config values paste karo
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
 
-// Sample data
-let totalBalance = 5.75;
+// Firebase initialize
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Global variables
+let currentUser = null;
+let telegramUser = null;
+let totalBalance = 0;
 let selectedPlan = 'Free';
 let planSpeed = 1;
 let miningActive = false;
@@ -21,14 +23,80 @@ let miningTimerInterval = null;
 let miningRemaining = 3 * 3600;
 let adWatched = false;
 let adTimerInterval = null;
-let totalReferrals = 3;
-let rewardEarned = 0.30;
+let totalReferrals = 0;
+let rewardEarned = 0;
 
-function updateBalances() {
+// Telegram user init
+function initTelegramUser() {
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe?.user;
+    telegramUser = user || null;
+    
+    if (telegramUser) {
+        document.querySelector('.profile-name').textContent = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
+        document.querySelector('.profile-id').textContent = 'Telegram ID: @' + (telegramUser.username || telegramUser.id);
+        document.querySelector('.avatar').textContent = telegramUser.first_name.charAt(0).toUpperCase();
+    }
+    tg.ready();
+    tg.expand();
+    
+    loadUserData();
+}
+
+async function loadUserData() {
+    if (!telegramUser) {
+        telegramUser = { id: 'demo_user', first_name: 'Demo', last_name: 'User', username: 'demo' };
+        document.querySelector('.profile-name').textContent = 'Demo User';
+        document.querySelector('.profile-id').textContent = 'Telegram ID: @demo';
+        document.querySelector('.avatar').textContent = 'D';
+    }
+    
+    const userId = telegramUser.id.toString();
+    const userRef = db.collection('users').doc(userId);
+    
+    try {
+        const doc = await userRef.get();
+        if (doc.exists) {
+            const data = doc.data();
+            totalBalance = data.balance || 0;
+            selectedPlan = data.plan || 'Free';
+            planSpeed = data.planSpeed || 1;
+            totalReferrals = data.totalReferrals || 0;
+            rewardEarned = data.rewardEarned || 0;
+        } else {
+            await userRef.set({
+                name: telegramUser.first_name + ' ' + (telegramUser.last_name || ''),
+                username: telegramUser.username || '',
+                balance: 0,
+                plan: 'Free',
+                planSpeed: 1,
+                totalReferrals: 0,
+                rewardEarned: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            totalBalance = 0;
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+    }
+    
+    updateUI();
+}
+
+function updateUI() {
     document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
     document.getElementById('withdrawBalance').textContent = totalBalance.toFixed(2);
     document.getElementById('totalReferrals').textContent = totalReferrals;
     document.getElementById('rewardEarned').textContent = '$' + rewardEarned.toFixed(2);
+    document.getElementById('currentPlan').textContent = selectedPlan;
+    document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+}
+
+function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 function switchSection(sectionId) {
@@ -54,18 +122,7 @@ function copyReferLink() {
     }
 }
 
-function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-}
-
-function updateMiningTimerDisplay() {
-    document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
-}
-
-function startMining() {
+async function startMining() {
     if (miningActive) {
         alert('Mining is already running!');
         return;
@@ -74,17 +131,31 @@ function startMining() {
         showAdModal();
         return;
     }
+    
     miningActive = true;
     miningRemaining = Math.floor(3 * 3600 / planSpeed);
     document.getElementById('startMiningBtn').textContent = '⏳ Mining in progress...';
     document.getElementById('startMiningBtn').disabled = true;
     updateMiningTimerDisplay();
+    
+    const userId = telegramUser.id.toString();
+    const sessionRef = db.collection('mining_sessions').doc(userId);
+    await sessionRef.set({
+        startTime: firebase.firestore.FieldValue.serverTimestamp(),
+        plan: selectedPlan,
+        speed: planSpeed,
+        reward: 0.05,
+        status: 'active',
+        userId: userId
+    });
+    
     miningTimerInterval = setInterval(() => {
         if (miningRemaining <= 0) {
             clearInterval(miningTimerInterval);
             miningActive = false;
             totalBalance += 0.05;
-            updateBalances();
+            updateBalanceInFirestore();
+            sessionRef.update({ status: 'completed', endTime: firebase.firestore.FieldValue.serverTimestamp() });
             document.getElementById('startMiningBtn').textContent = 'Start Mining';
             document.getElementById('startMiningBtn').disabled = false;
             document.getElementById('miningTimer').textContent = '03:00:00';
@@ -95,6 +166,18 @@ function startMining() {
             updateMiningTimerDisplay();
         }
     }, 1000);
+}
+
+async function updateBalanceInFirestore() {
+    if (!telegramUser) return;
+    const userId = telegramUser.id.toString();
+    await db.collection('users').doc(userId).update({
+        balance: totalBalance,
+        plan: selectedPlan,
+        planSpeed: planSpeed,
+        totalReferrals: totalReferrals,
+        rewardEarned: rewardEarned
+    });
 }
 
 function showAdModal() {
@@ -125,7 +208,7 @@ function skipAd() {
     }
 }
 
-function selectPlan(planName, price, speedMultiplier) {
+async function selectPlan(planName, price, speedMultiplier) {
     if (planName === selectedPlan) {
         alert('This plan is already selected');
         return;
@@ -133,16 +216,15 @@ function selectPlan(planName, price, speedMultiplier) {
     selectedPlan = planName;
     planSpeed = speedMultiplier;
     document.getElementById('currentPlan').textContent = planName;
-    alert(`${planName} plan activated (Demo) - Speed ${speedMultiplier}x`);
+    await updateBalanceInFirestore();
+    alert(`${planName} plan activated - Speed ${speedMultiplier}x`);
     if (!miningActive) {
         miningRemaining = Math.floor(3 * 3600 / planSpeed);
         updateMiningTimerDisplay();
-    } else {
-        alert('Mining is active, next session will use new speed');
     }
 }
 
-function withdraw() {
+async function withdraw() {
     const address = document.getElementById('usdtAddress').value.trim();
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
     if (!address) {
@@ -158,9 +240,18 @@ function withdraw() {
         return;
     }
     totalBalance -= 25;
-    updateBalances();
+    await updateBalanceInFirestore();
+    
+    const userId = telegramUser.id.toString();
+    await db.collection('withdrawals').add({
+        userId: userId,
+        address: address,
+        amount: 25,
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
     document.getElementById('usdtAddress').value = '';
-    alert('✅ Withdrawal request successful! $25 will be sent.');
+    alert('✅ Withdrawal request submitted!');
 }
 
 function logout() {
@@ -169,6 +260,8 @@ function logout() {
     }
 }
 
-updateBalances();
-document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
-adWatched = false;
+function updateMiningTimerDisplay() {
+    document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+}
+
+window.addEventListener('load', initTelegramUser);
