@@ -1,11 +1,11 @@
 // Firebase configuration - apni config values paste karo
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyB26W-lTdcCFuEjBiJCBVLoNW14Pkw7ep8",
+    authDomain: "earning-hub-4b88a.firebaseapp.com",
+    projectId: "earning-hub-4b88a",
+    storageBucket: "earning-hub-4b88a.firebasestorage.app",
+    messagingSenderId: "381752598017",
+    appId: "1:381752598017:web:0fe2db8c9c2f59f279ea00"
 };
 
 // Firebase initialize
