@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EARNING HUB - Mini App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="app-header">
+            <h1>⚡ EARNING HUB</h1>
+            <div class="subtitle">Mine • Refer • Earn</div>
+        </div>
+
+        <div class="page-container">
+            <!-- HOME SECTION -->
+            <div class="section active" id="home-section">
+                <div class="balance-display">
+                    <div class="label">Total Balance</div>
+                    <div class="amount">$<span id="totalBalance">0.00</span></div>
+                </div>
+                <div class="two-box-row">
+                    <div class="card watch-earn" onclick="alert('Watch & Earn will open')">
+                        <div class="icon">📺</div>
+                        <div class="box-title">Watch and Earn</div>
+                        <div class="box-sub">Watch videos, earn money</div>
+                    </div>
+                    <div class="card spin-win" onclick="alert('Spin & Win will open')">
+                        <div class="icon">🎡</div>
+                        <div class="box-title">Spin and Win</div>
+                        <div class="box-sub">Spin and win rewards</div>
+                    </div>
+                </div>
+                <div class="invite-center" onclick="alert('Invite & Earn will open')">
+                    <div class="icon">📨</div>
+                    <div class="box-title">Invite and Earn</div>
+                    <div class="box-sub">Invite friends, earn $0.1</div>
+                </div>
+                <div class="tx-history">
+                    <div class="tx-header">
+                        <span class="tx-title">Transaction History</span>
+                        <span class="tx-badge">Last 5</span>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info"><div class="tx-icon">⛏️</div><div><div class="tx-name">Mining Reward</div><div class="tx-date">Today, 10:30</div></div></div>
+                        <div class="tx-amount positive">+$0.05</div>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info"><div class="tx-icon">📨</div><div><div class="tx-name">Referral Bonus</div><div class="tx-date">Yesterday, 18:45</div></div></div>
+                        <div class="tx-amount positive">+$0.10</div>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info"><div class="tx-icon">💳</div><div><div class="tx-name">Withdrawal</div><div class="tx-date">2 days ago</div></div></div>
+                        <div class="tx-amount negative">-$25.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFER SECTION -->
+            <div class="section" id="refer-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="font-size:20px; text-align:center;">📨 Refer & Earn</h2>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Share your link and earn $0.1 + 50 Ads bonus</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Your Referral Link</div>
+                    <div style="background:#0f172a; border:1.5px solid #2a3a5c; border-radius:12px; padding:12px; margin-top:8px; font-weight:700; word-break:break-all;" id="referLink">https://newearn.app/ref/user12345</div>
+                    <button class="btn-primary" style="margin-top:12px;" onclick="copyReferLink()">Copy Link</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 Stats</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <div><strong>Total Referrals</strong><br><span id="totalReferrals">0</span></div>
+                        <div><strong>Reward Earned</strong><br><span id="rewardEarned">$0.00</span></div>
+                        <div><strong>Limit</strong><br>100 users</div>
+                    </div>
+                </div>
+                <div class="card" style="background:#1a0f2e; border-color:#4c1d95;">
+                    <div class="card-sub" style="color:#c084fc;">Rules: Each referral gives $0.1 + 50 Ads must be completed for reward. Maximum reward for 100 users.</div>
+                </div>
+            </div>
+
+            <!-- MINING SECTION -->
+            <div class="section" id="mining-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="text-align:center;">⛏️ Mining</h2>
+                </div>
+                <div class="mining-stats">
+                    <div class="mining-stat-card"><div class="stat-label">Current Plan</div><div class="stat-value" id="currentPlan">Free</div></div>
+                    <div class="mining-stat-card"><div class="stat-label">Session Reward</div><div class="stat-value">$0.05</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Mining Session</div>
+                    <div id="miningTimer" style="font-size:32px; font-weight:900; text-align:center; margin:12px 0; color:#fbbf24;">03:00:00</div>
+                    <div class="card-sub" style="text-align:center;">You must watch an ad before starting</div>
+                    <button class="btn-primary" id="startMiningBtn" style="margin-top:12px;" onclick="startMining()">Start Mining</button>
+                </div>
+                <div class="card"><div class="card-title">Available Plans</div><div class="card-sub">Increase speed, earn faster</div></div>
+                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)"><div class="plan-info"><div class="plan-name">🥈 Silver Plan</div><div class="plan-detail">10x speed • Reward $0.05/session</div></div><div class="plan-price">$25<span class="price-suffix">/plan</span></div></div>
+                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)"><div class="plan-info"><div class="plan-name">🥇 Gold Plan</div><div class="plan-detail">15x speed • Reward $0.05/session</div></div><div class="plan-price">$60<span class="price-suffix">/plan</span></div></div>
+                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)"><div class="plan-info"><div class="plan-name">💎 Premium Plan</div><div class="plan-detail">20x speed • Reward $0.05/session</div></div><div class="plan-price">$100<span class="price-suffix">/plan</span></div></div>
+            </div>
+
+            <!-- WITHDRAW SECTION -->
+            <div class="section" id="withdraw-section">
+                <div class="balance-display" style="margin-bottom:14px;">
+                    <div class="label">Available Balance</div>
+                    <div class="amount">$<span id="withdrawBalance">0.00</span></div>
+                </div>
+                <div class="withdraw-box">
+                    <label>USDT Wallet Address</label>
+                    <input type="text" id="usdtAddress" placeholder="Enter BEP20 or TRC20 address">
+                    <div class="hint">Network: BEP20 or TRC20 (type above)</div>
+                </div>
+                <div class="withdraw-box">
+                    <label>Withdrawal Amount (USD)</label>
+                    <input type="number" id="withdrawAmount" value="25" min="25" max="25" step="0.01">
+                    <div class="hint">Minimum and maximum withdrawal is $25 only</div>
+                </div>
+                <button class="btn-primary" onclick="withdraw()">Withdraw Request</button>
+                <div style="margin-top:14px; text-align:center; color:var(--text-muted); font-size:12px;">Only $25 can be withdrawn</div>
+            </div>
+
+            <!-- PROFILE SECTION -->
+            <div class="section" id="profile-section">
+                <div class="profile-header">
+                    <div class="avatar">👤</div>
+                    <div class="profile-name">Rahul Sharma</div>
+                    <div class="profile-id">Telegram ID: @rahul_12345</div>
+                </div>
+                <div class="profile-menu">
+                    <div class="card" onclick="alert('Account Details')"><span>📋 Account Details</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Security')"><span>🔐 Security</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Terms & Conditions')"><span>📄 Terms & Conditions</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Privacy & Policy')"><span>🛡️ Privacy & Policy</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Help & Support')"><span>🆘 Help & Support</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="logout()"><span>🚪 Logout</span><span class="arrow">›</span></div>
+                </div>
+                <div class="profile-footer">Support Team</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-section="home-section" onclick="switchSection('home-section')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
+            <div class="nav-item" data-section="refer-section" onclick="switchSection('refer-section')"><span class="nav-icon">📨</span><span class="nav-label">Refer</span></div>
+            <div class="nav-item" data-section="mining-section" onclick="switchSection('mining-section')"><span class="nav-icon">⛏️</span><span class="nav-label">Mining</span></div>
+            <div class="nav-item" data-section="withdraw-section" onclick="switchSection('withdraw-section')"><span class="nav-icon">💰</span><span class="nav-label">Withdraw</span></div>
+            <div class="nav-item" data-section="profile-section" onclick="switchSection('profile-section')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
+        </div>
+    </div>
+
+    <!-- MODAL FOR AD -->
+    <div class="modal-overlay" id="adModal">
+        <div class="modal-box">
+            <h3>📺 Watch Ad</h3>
+            <p>Please complete the ad to start mining</p>
+            <div class="ad-timer" id="adTimer">5</div>
+            <button class="btn-secondary" id="adSkipBtn" onclick="skipAd()" disabled>Please wait...</button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
