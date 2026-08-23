@@ -1,220 +1,629 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EARNING HUB - Mini App</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Telegram Web App Script -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earn App - Home</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      padding: 20px 10px;
+    }
+
+    .app-container {
+      max-width: 480px;
+      width: 100%;
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      color: #1a1a2e;
+    }
+
+    .points-badge {
+      background: linear-gradient(135deg, #ffd700, #ffb347);
+      padding: 10px 16px;
+      border-radius: 30px;
+      font-weight: bold;
+      color: #1a1a2e;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(255, 180, 0, 0.4);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 20px 0 12px;
+      color: #2d3436;
+      border-left: 5px solid #6c5ce7;
+      padding-left: 10px;
+    }
+
+    /* Watch & Earn Section */
+    .ads-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ad-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: 0.2s;
+      border: 1px solid #e0e0e0;
+    }
+
+    .ad-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+
+    .ad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .ad-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #2d3436;
+    }
+
+    .ad-limit {
+      font-size: 13px;
+      color: #636e72;
+      background: #eee;
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+      border-radius: 10px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .watch-btn {
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      font-size: 14px;
+    }
+
+    .watch-btn:hover:not(:disabled) {
+      background: #5f3dc4;
+    }
+
+    .watch-btn:disabled {
+      background: #b2bec3;
+      cursor: not-allowed;
+    }
+
+    /* Spin Section */
+    .wheel-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 0 0 8px #fff, 0 0 0 12px #6c5ce7;
+      transition: transform 4s cubic-bezier(0.25, 0.1, 0.15, 1);
+      will-change: transform;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 25px solid #e74c3c;
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.3));
+      z-index: 10;
+    }
+
+    .spin-btn {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      padding: 14px 35px;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+      transition: 0.2s;
+    }
+
+    .spin-btn:disabled {
+      background: #b2bec3;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Invite Section */
+    .invite-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      border: 1px dashed #6c5ce7;
+      text-align: center;
+    }
+
+    .invite-link {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      background: white;
+    }
+
+    .copy-btn {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #009e7c;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 300px;
+      width: 90%;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-box h3 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #2d3436;
+    }
+
+    .modal-box p {
+      color: #636e72;
+      margin-bottom: 20px;
+    }
+
+    .close-modal {
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2d3436;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 30px;
+      font-size: 14px;
+      opacity: 0;
+      transition: 0.3s;
+      pointer-events: none;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
-    <div class="phone-frame">
-        <div class="app-header">
-            <h1>⚡ EARNING HUB</h1>
-            <div class="subtitle">Mine • Refer • Earn</div>
-        </div>
-
-        <div class="page-container">
-            <!-- HOME SECTION -->
-            <div class="section active" id="home-section">
-                <div class="balance-display">
-                    <div class="label">Total Balance</div>
-                    <div class="amount">$<span id="totalBalance">0.00</span></div>
-                </div>
-
-                <div class="two-box-row">
-                    <div class="card watch-earn" onclick="alert('Watch & Earn will open')">
-                        <div class="icon">📺</div>
-                        <div class="box-title">Watch and Earn</div>
-                        <div class="box-sub">Watch videos, earn money</div>
-                    </div>
-                    <div class="card spin-win" onclick="alert('Spin & Win will open')">
-                        <div class="icon">🎡</div>
-                        <div class="box-title">Spin and Win</div>
-                        <div class="box-sub">Spin and win rewards</div>
-                    </div>
-                </div>
-
-                <div class="invite-center" onclick="alert('Invite & Earn will open')">
-                    <div class="icon">📨</div>
-                    <div class="box-title">Invite and Earn</div>
-                    <div class="box-sub">Invite friends, earn $0.1</div>
-                </div>
-
-                <div class="tx-history">
-                    <div class="tx-header">
-                        <span class="tx-title">Transaction History</span>
-                        <span class="tx-badge">Last 5</span>
-                    </div>
-                    <div class="tx-item">
-                        <div class="tx-info">
-                            <div class="tx-icon">⛏️</div>
-                            <div>
-                                <div class="tx-name">Mining Reward</div>
-                                <div class="tx-date">Today, 10:30</div>
-                            </div>
-                        </div>
-                        <div class="tx-amount positive">+$0.05</div>
-                    </div>
-                    <div class="tx-item">
-                        <div class="tx-info">
-                            <div class="tx-icon">📨</div>
-                            <div>
-                                <div class="tx-name">Referral Bonus</div>
-                                <div class="tx-date">Yesterday, 18:45</div>
-                            </div>
-                        </div>
-                        <div class="tx-amount positive">+$0.10</div>
-                    </div>
-                    <div class="tx-item">
-                        <div class="tx-info">
-                            <div class="tx-icon">💳</div>
-                            <div>
-                                <div class="tx-name">Withdrawal</div>
-                                <div class="tx-date">2 days ago</div>
-                            </div>
-                        </div>
-                        <div class="tx-amount negative">-$25.00</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- REFER SECTION -->
-            <div class="section" id="refer-section">
-                <div class="card card-highlight">
-                    <h2 class="card-title" style="font-size:20px; text-align:center;">📨 Refer & Earn</h2>
-                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Share your link and earn $0.1 + 50 Ads bonus</p>
-                </div>
-                <div class="card">
-                    <div class="card-title">Your Referral Link</div>
-                    <div style="background:#0f172a; border:1.5px solid #2a3a5c; border-radius:12px; padding:12px; margin-top:8px; font-weight:700; word-break:break-all;" id="referLink">https://newearn.app/ref/user12345</div>
-                    <button class="btn-primary" style="margin-top:12px;" onclick="copyReferLink()">Copy Link</button>
-                </div>
-                <div class="card">
-                    <div class="card-title">📊 Stats</div>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                        <div><strong>Total Referrals</strong><br><span id="totalReferrals">0</span></div>
-                        <div><strong>Reward Earned</strong><br><span id="rewardEarned">$0.00</span></div>
-                        <div><strong>Limit</strong><br>100 users</div>
-                    </div>
-                </div>
-                <div class="card" style="background:#1a0f2e; border-color:#4c1d95;">
-                    <div class="card-sub" style="color:#c084fc;">Rules: Each referral gives $0.1 + 50 Ads must be completed for reward. Maximum reward for 100 users.</div>
-                </div>
-            </div>
-
-            <!-- MINING SECTION -->
-            <div class="section" id="mining-section">
-                <div class="card card-highlight">
-                    <h2 class="card-title" style="text-align:center;">⛏️ Mining</h2>
-                </div>
-                <div class="mining-stats">
-                    <div class="mining-stat-card">
-                        <div class="stat-label">Current Plan</div>
-                        <div class="stat-value" id="currentPlan">Free</div>
-                    </div>
-                    <div class="mining-stat-card">
-                        <div class="stat-label">Session Reward</div>
-                        <div class="stat-value">$0.05</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Mining Session</div>
-                    <div id="miningTimer" style="font-size:32px; font-weight:900; text-align:center; margin:12px 0; color:#fbbf24;">03:00:00</div>
-                    <div class="card-sub" style="text-align:center;">You must watch an ad before starting</div>
-                    <button class="btn-primary" id="startMiningBtn" style="margin-top:12px;" onclick="startMining()">Start Mining</button>
-                </div>
-                <div class="card">
-                    <div class="card-title">Available Plans</div>
-                    <div class="card-sub">Increase speed, earn faster</div>
-                </div>
-                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)">
-                    <div class="plan-info">
-                        <div class="plan-name">🥈 Silver Plan</div>
-                        <div class="plan-detail">10x speed • Reward $0.05/session</div>
-                    </div>
-                    <div class="plan-price">$25<span class="price-suffix">/plan</span></div>
-                </div>
-                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)">
-                    <div class="plan-info">
-                        <div class="plan-name">🥇 Gold Plan</div>
-                        <div class="plan-detail">15x speed • Reward $0.05/session</div>
-                    </div>
-                    <div class="plan-price">$60<span class="price-suffix">/plan</span></div>
-                </div>
-                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)">
-                    <div class="plan-info">
-                        <div class="plan-name">💎 Premium Plan</div>
-                        <div class="plan-detail">20x speed • Reward $0.05/session</div>
-                    </div>
-                    <div class="plan-price">$100<span class="price-suffix">/plan</span></div>
-                </div>
-            </div>
-
-            <!-- WITHDRAW SECTION -->
-            <div class="section" id="withdraw-section">
-                <div class="balance-display" style="margin-bottom:14px;">
-                    <div class="label">Available Balance</div>
-                    <div class="amount">$<span id="withdrawBalance">0.00</span></div>
-                </div>
-                <div class="withdraw-box">
-                    <label>USDT Wallet Address</label>
-                    <input type="text" id="usdtAddress" placeholder="Enter BEP20 or TRC20 address">
-                    <div class="hint">Network: BEP20 or TRC20 (type above)</div>
-                </div>
-                <div class="withdraw-box">
-                    <label>Withdrawal Amount (USD)</label>
-                    <input type="number" id="withdrawAmount" value="25" min="25" max="25" step="0.01">
-                    <div class="hint">Minimum and maximum withdrawal is $25 only</div>
-                </div>
-                <button class="btn-primary" onclick="withdraw()">Withdraw Request</button>
-                <div style="margin-top:14px; text-align:center; color:var(--text-muted); font-size:12px;">Only $25 can be withdrawn</div>
-            </div>
-
-            <!-- PROFILE SECTION -->
-            <div class="section" id="profile-section">
-                <div class="profile-header">
-                    <div class="avatar">👤</div>
-                    <div class="profile-name">Rahul Sharma</div>
-                    <div class="profile-id">Telegram ID: @rahul_12345</div>
-                </div>
-                <div class="profile-menu">
-                    <div class="card" onclick="alert('Account Details')"><span>📋 Account Details</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Security')"><span>🔐 Security</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Terms & Conditions')"><span>📄 Terms & Conditions</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Privacy & Policy')"><span>🛡️ Privacy & Policy</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Help & Support')"><span>🆘 Help & Support</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="logout()"><span>🚪 Logout</span><span class="arrow">›</span></div>
-                </div>
-                <div class="profile-footer">Support Team</div>
-            </div>
-        </div>
-
-        <!-- BOTTOM NAVIGATION -->
-        <div class="bottom-nav">
-            <div class="nav-item active" data-section="home-section" onclick="switchSection('home-section')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
-            <div class="nav-item" data-section="refer-section" onclick="switchSection('refer-section')"><span class="nav-icon">📨</span><span class="nav-label">Refer</span></div>
-            <div class="nav-item" data-section="mining-section" onclick="switchSection('mining-section')"><span class="nav-icon">⛏️</span><span class="nav-label">Mining</span></div>
-            <div class="nav-item" data-section="withdraw-section" onclick="switchSection('withdraw-section')"><span class="nav-icon">💰</span><span class="nav-label">Withdraw</span></div>
-            <div class="nav-item" data-section="profile-section" onclick="switchSection('profile-section')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
-        </div>
+  <div class="app-container">
+    <div class="header">
+      <h1>🏠 Home</h1>
+      <div class="points-badge">🪙 <span id="totalPoints">0</span> Points</div>
     </div>
 
-    <!-- MODAL FOR AD -->
-    <div class="modal-overlay" id="adModal">
-        <div class="modal-box">
-            <h3>📺 Watch Ad</h3>
-            <p>Please complete the ad to start mining</p>
-            <div class="ad-timer" id="adTimer">5</div>
-            <button class="btn-secondary" id="adSkipBtn" onclick="skipAd()" disabled>Please wait...</button>
+    <!-- Watch and Earn Section -->
+    <div class="section-title">📺 Watch and Earn</div>
+    <div class="ads-container">
+      <!-- Simple Ads -->
+      <div class="ad-card">
+        <div class="ad-header">
+          <span class="ad-name">Simple Ads</span>
+          <span class="ad-limit" id="simpleLimitLabel">0/25</span>
         </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="simpleProgress"></div>
+        </div>
+        <button class="watch-btn" id="simpleBtn">Watch Ad (+25 Points)</button>
+      </div>
+
+      <!-- Pro Ads -->
+      <div class="ad-card">
+        <div class="ad-header">
+          <span class="ad-name">Pro Ads</span>
+          <span class="ad-limit" id="proLimitLabel">0/25</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="proProgress"></div>
+        </div>
+        <button class="watch-btn" id="proBtn">Watch Ad (+25 Points)</button>
+      </div>
+
+      <!-- Sponsor Ads -->
+      <div class="ad-card">
+        <div class="ad-header">
+          <span class="ad-name">Sponsor Ads</span>
+          <span class="ad-limit" id="sponsorLimitLabel">0/25</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="sponsorProgress"></div>
+        </div>
+        <button class="watch-btn" id="sponsorBtn">Watch Ad (+25 Points)</button>
+      </div>
     </div>
 
-    <!-- Main JS -->
-    <script src="js/main.js"></script>
+    <!-- Spin and Earn Section -->
+    <div class="section-title">🎡 Spin and Earn</div>
+    <div class="wheel-wrapper">
+      <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="280" height="280"></canvas>
+      </div>
+      <button class="spin-btn" id="spinBtn">SPIN NOW</button>
+    </div>
+
+    <!-- Invite and Ref Section -->
+    <div class="section-title">👥 Invite & Ref</div>
+    <div class="invite-card">
+      <p style="margin-bottom: 5px; color: #2d3436;">अपना Referral Link शेयर करें</p>
+      <input type="text" class="invite-link" id="refLink" value="https://example.com/ref?user=12345" readonly>
+      <button class="copy-btn" id="copyBtn">📋 Copy Link</button>
+      <p id="inviteCount" style="margin-top: 15px; color: #636e72;">Total Invites: 0</p>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h3 id="modalTitle">🎉 Result</h3>
+      <p id="modalMessage"></p>
+      <button class="close-modal" id="closeModal">Okay</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== UTILITY FUNCTIONS ====================
+    const $ = (id) => document.getElementById(id);
+    const DAILY_LIMIT = 25;
+    const POINTS_PER_AD = 25;
+
+    // Get today's date as YYYY-MM-DD
+    function getToday() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    // Show toast message
+    function showToast(msg) {
+      const toast = $('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Show modal
+    function showModal(title, message) {
+      $('modalTitle').textContent = title;
+      $('modalMessage').textContent = message;
+      $('modalOverlay').style.display = 'flex';
+    }
+
+    // Hide modal
+    $('closeModal').addEventListener('click', () => {
+      $('modalOverlay').style.display = 'none';
+    });
+
+    // ==================== POINTS MANAGEMENT ====================
+    let totalPoints = parseInt(localStorage.getItem('earnPoints') || '0');
+    function updatePointsDisplay() {
+      $('totalPoints').textContent = totalPoints;
+      localStorage.setItem('earnPoints', totalPoints);
+    }
+    function addPoints(amount) {
+      totalPoints += amount;
+      updatePointsDisplay();
+    }
+
+    // ==================== DAILY AD LIMITS ====================
+    let adData = JSON.parse(localStorage.getItem('adData') || '{}');
+    // Structure: { date: 'YYYY-MM-DD', simple: 0, pro: 0, sponsor: 0 }
+
+    function resetDailyIfNeeded() {
+      const today = getToday();
+      if (adData.date !== today) {
+        adData = { date: today, simple: 0, pro: 0, sponsor: 0 };
+        localStorage.setItem('adData', JSON.stringify(adData));
+      }
+    }
+
+    function saveAdData() {
+      localStorage.setItem('adData', JSON.stringify(adData));
+    }
+
+    function updateAdUI() {
+      // Simple
+      const simpleCount = adData.simple || 0;
+      $('simpleLimitLabel').textContent = `${simpleCount}/${DAILY_LIMIT}`;
+      $('simpleProgress').style.width = `${(simpleCount / DAILY_LIMIT) * 100}%`;
+      $('simpleBtn').disabled = simpleCount >= DAILY_LIMIT;
+      $('simpleBtn').textContent = simpleCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
+
+      // Pro
+      const proCount = adData.pro || 0;
+      $('proLimitLabel').textContent = `${proCount}/${DAILY_LIMIT}`;
+      $('proProgress').style.width = `${(proCount / DAILY_LIMIT) * 100}%`;
+      $('proBtn').disabled = proCount >= DAILY_LIMIT;
+      $('proBtn').textContent = proCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
+
+      // Sponsor
+      const sponsorCount = adData.sponsor || 0;
+      $('sponsorLimitLabel').textContent = `${sponsorCount}/${DAILY_LIMIT}`;
+      $('sponsorProgress').style.width = `${(sponsorCount / DAILY_LIMIT) * 100}%`;
+      $('sponsorBtn').disabled = sponsorCount >= DAILY_LIMIT;
+      $('sponsorBtn').textContent = sponsorCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
+    }
+
+    function watchAd(type) {
+      resetDailyIfNeeded();
+      const current = adData[type] || 0;
+      if (current >= DAILY_LIMIT) {
+        showToast('❌ Daily limit पूरी हो गई!');
+        return;
+      }
+      adData[type] = current + 1;
+      saveAdData();
+      addPoints(POINTS_PER_AD);
+      updateAdUI();
+      showToast(`✅ ${type} Ad देखा! +${POINTS_PER_AD} Points`);
+    }
+
+    // Attach ad button events
+    $('simpleBtn').addEventListener('click', () => watchAd('simple'));
+    $('proBtn').addEventListener('click', () => watchAd('pro'));
+    $('sponsorBtn').addEventListener('click', () => watchAd('sponsor'));
+
+    // ==================== SPIN WHEEL ====================
+    const canvas = $('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 130; // Leave margin for border
+
+    // Segment definitions (order clockwise from top)
+    const segments = [
+      { label: '$25', weight: 1, type: 'display', points: 0, color: '#e74c3c' },
+      { label: '$50', weight: 1, type: 'display', points: 0, color: '#9b59b6' },
+      { label: '1000 Pts', weight: 2, type: 'points', points: 1000, color: '#f1c40f' },
+      { label: '100 Pts', weight: 20, type: 'points', points: 100, color: '#2ecc71' },
+      { label: '10 Pts', weight: 40, type: 'points', points: 10, color: '#3498db' },
+      { label: '1 Pt', weight: 36, type: 'points', points: 1, color: '#e67e22' }
+    ];
+
+    const totalWeight = segments.reduce((sum, seg) => sum + seg.weight, 0);
+
+    function drawWheel(rotationAngle = 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const startAngle = -Math.PI / 2; // Start from top
+      const segmentAngle = (Math.PI * 2) / segments.length;
+
+      segments.forEach((seg, i) => {
+        const angleStart = startAngle + i * segmentAngle;
+        const angleEnd = angleStart + segmentAngle;
+
+        // Draw segment
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angleStart, angleEnd);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angleStart + segmentAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Segoe UI';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 3;
+        ctx.fillText(seg.label, radius - 10, 5);
+        ctx.restore();
+      });
+
+      // Draw center circle
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#6c5ce7';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+
+    // Initial draw
+    drawWheel();
+
+    let isSpinning = false;
+    let currentRotation = 0; // cumulative rotation in degrees
+
+    function getWeightedRandomSegment() {
+      let random = Math.random() * totalWeight;
+      for (let i = 0; i < segments.length; i++) {
+        random -= segments[i].weight;
+        if (random <= 0) return i;
+      }
+      return segments.length - 1;
+    }
+
+    function spinWheel() {
+      if (isSpinning) return;
+      isSpinning = true;
+      $('spinBtn').disabled = true;
+
+      // Determine winning segment
+      const winIndex = getWeightedRandomSegment();
+      const winSegment = segments[winIndex];
+      const segmentAngle = 360 / segments.length;
+      const targetCenterAngle = winIndex * segmentAngle + segmentAngle / 2; // from top
+      // We want to rotate so that targetCenterAngle is at top (0 degrees)
+      // Current rotation mod 360
+      const currentMod = currentRotation % 360;
+      let delta = (360 - targetCenterAngle - currentMod + 360) % 360;
+      // Add 5 full spins for effect
+      const extraSpins = 5 * 360;
+      const newRotation = currentRotation + extraSpins + delta;
+
+      // Apply rotation
+      canvas.style.transition = 'transform 4s cubic-bezier(0.25, 0.1, 0.15, 1)';
+      canvas.style.transform = `rotate(${newRotation}deg)`;
+      currentRotation = newRotation;
+
+      // After animation ends
+      setTimeout(() => {
+        isSpinning = false;
+        $('spinBtn').disabled = false;
+        const msg = winSegment.type === 'points' 
+          ? `🎉 आपको ${winSegment.points} Points मिले!` 
+          : '😅 यह reward सिर्फ display के लिए है, कोई points नहीं मिले।';
+        showModal('Spin Result', msg);
+        if (winSegment.type === 'points') {
+          addPoints(winSegment.points);
+        }
+      }, 4100);
+    }
+
+    $('spinBtn').addEventListener('click', spinWheel);
+
+    // ==================== INVITE & REF ====================
+    let invites = parseInt(localStorage.getItem('inviteCount') || '0');
+    $('inviteCount').textContent = `Total Invites: ${invites}`;
+
+    $('copyBtn').addEventListener('click', () => {
+      const refInput = $('refLink');
+      refInput.select();
+      refInput.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(refInput.value).then(() => {
+        showToast('📋 Referral link copied!');
+        // Simulate new invite (for demo only)
+        invites++;
+        localStorage.setItem('inviteCount', invites);
+        $('inviteCount').textContent = `Total Invites: ${invites}`;
+      }).catch(() => {
+        showToast('❌ Copy failed');
+      });
+    });
+
+    // ==================== INIT ====================
+    function init() {
+      resetDailyIfNeeded();
+      updateAdUI();
+      updatePointsDisplay();
+    }
+    init();
+  </script>
 </body>
 </html>
