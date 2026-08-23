@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EARNING HUB - Mini App</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="phone-frame">
@@ -21,6 +25,7 @@
                     <div class="label">Total Balance</div>
                     <div class="amount">$<span id="totalBalance">0.00</span></div>
                 </div>
+
                 <div class="two-box-row">
                     <div class="card watch-earn" onclick="alert('Watch & Earn will open')">
                         <div class="icon">📺</div>
@@ -33,26 +38,46 @@
                         <div class="box-sub">Spin and win rewards</div>
                     </div>
                 </div>
+
                 <div class="invite-center" onclick="alert('Invite & Earn will open')">
                     <div class="icon">📨</div>
                     <div class="box-title">Invite and Earn</div>
                     <div class="box-sub">Invite friends, earn $0.1</div>
                 </div>
+
                 <div class="tx-history">
                     <div class="tx-header">
                         <span class="tx-title">Transaction History</span>
                         <span class="tx-badge">Last 5</span>
                     </div>
                     <div class="tx-item">
-                        <div class="tx-info"><div class="tx-icon">⛏️</div><div><div class="tx-name">Mining Reward</div><div class="tx-date">Today, 10:30</div></div></div>
+                        <div class="tx-info">
+                            <div class="tx-icon">⛏️</div>
+                            <div>
+                                <div class="tx-name">Mining Reward</div>
+                                <div class="tx-date">Today, 10:30</div>
+                            </div>
+                        </div>
                         <div class="tx-amount positive">+$0.05</div>
                     </div>
                     <div class="tx-item">
-                        <div class="tx-info"><div class="tx-icon">📨</div><div><div class="tx-name">Referral Bonus</div><div class="tx-date">Yesterday, 18:45</div></div></div>
+                        <div class="tx-info">
+                            <div class="tx-icon">📨</div>
+                            <div>
+                                <div class="tx-name">Referral Bonus</div>
+                                <div class="tx-date">Yesterday, 18:45</div>
+                            </div>
+                        </div>
                         <div class="tx-amount positive">+$0.10</div>
                     </div>
                     <div class="tx-item">
-                        <div class="tx-info"><div class="tx-icon">💳</div><div><div class="tx-name">Withdrawal</div><div class="tx-date">2 days ago</div></div></div>
+                        <div class="tx-info">
+                            <div class="tx-icon">💳</div>
+                            <div>
+                                <div class="tx-name">Withdrawal</div>
+                                <div class="tx-date">2 days ago</div>
+                            </div>
+                        </div>
                         <div class="tx-amount negative">-$25.00</div>
                     </div>
                 </div>
@@ -88,8 +113,14 @@
                     <h2 class="card-title" style="text-align:center;">⛏️ Mining</h2>
                 </div>
                 <div class="mining-stats">
-                    <div class="mining-stat-card"><div class="stat-label">Current Plan</div><div class="stat-value" id="currentPlan">Free</div></div>
-                    <div class="mining-stat-card"><div class="stat-label">Session Reward</div><div class="stat-value">$0.05</div></div>
+                    <div class="mining-stat-card">
+                        <div class="stat-label">Current Plan</div>
+                        <div class="stat-value" id="currentPlan">Free</div>
+                    </div>
+                    <div class="mining-stat-card">
+                        <div class="stat-label">Session Reward</div>
+                        <div class="stat-value">$0.05</div>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="card-title">Mining Session</div>
@@ -97,10 +128,31 @@
                     <div class="card-sub" style="text-align:center;">You must watch an ad before starting</div>
                     <button class="btn-primary" id="startMiningBtn" style="margin-top:12px;" onclick="startMining()">Start Mining</button>
                 </div>
-                <div class="card"><div class="card-title">Available Plans</div><div class="card-sub">Increase speed, earn faster</div></div>
-                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)"><div class="plan-info"><div class="plan-name">🥈 Silver Plan</div><div class="plan-detail">10x speed • Reward $0.05/session</div></div><div class="plan-price">$25<span class="price-suffix">/plan</span></div></div>
-                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)"><div class="plan-info"><div class="plan-name">🥇 Gold Plan</div><div class="plan-detail">15x speed • Reward $0.05/session</div></div><div class="plan-price">$60<span class="price-suffix">/plan</span></div></div>
-                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)"><div class="plan-info"><div class="plan-name">💎 Premium Plan</div><div class="plan-detail">20x speed • Reward $0.05/session</div></div><div class="plan-price">$100<span class="price-suffix">/plan</span></div></div>
+                <div class="card">
+                    <div class="card-title">Available Plans</div>
+                    <div class="card-sub">Increase speed, earn faster</div>
+                </div>
+                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)">
+                    <div class="plan-info">
+                        <div class="plan-name">🥈 Silver Plan</div>
+                        <div class="plan-detail">10x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$25<span class="price-suffix">/plan</span></div>
+                </div>
+                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)">
+                    <div class="plan-info">
+                        <div class="plan-name">🥇 Gold Plan</div>
+                        <div class="plan-detail">15x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$60<span class="price-suffix">/plan</span></div>
+                </div>
+                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)">
+                    <div class="plan-info">
+                        <div class="plan-name">💎 Premium Plan</div>
+                        <div class="plan-detail">20x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$100<span class="price-suffix">/plan</span></div>
+                </div>
             </div>
 
             <!-- WITHDRAW SECTION -->
@@ -162,6 +214,7 @@
         </div>
     </div>
 
+    <!-- Main JS -->
     <script src="js/main.js"></script>
 </body>
 </html>
