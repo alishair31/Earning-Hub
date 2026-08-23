@@ -3,13 +3,642 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EARNING HUB - Mini App</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Telegram Web App Script -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <title>New Earning - Mini App</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --card-bg: #111827;
+            --card-border: #1f2a44;
+            --accent: #3b82f6;
+            --accent-glow: #3b82f666;
+            --gold: #f59e0b;
+            --silver: #94a3b8;
+            --premium: #a855f7;
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --nav-bg: #0f172a;
+            --box-radius: 16px;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 900px;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 60px #00000080;
+            border-radius: 24px;
+            border: 2px solid #1e293b;
+        }
+
+        @media (max-width: 430px) {
+            .phone-frame {
+                border-radius: 0;
+                border: none;
+                max-height: 100vh;
+            }
+        }
+
+        .app-header {
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            padding: 16px 20px 14px;
+            text-align: center;
+            border-bottom: 1px solid #1e293b;
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .app-header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-header .subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .page-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px 90px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .page-container::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 18px 16px;
+            margin-bottom: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:active {
+            transform: scale(0.97);
+        }
+        .card-glow {
+            box-shadow: 0 0 24px #3b82f61a, 0 8px 24px #00000040;
+        }
+        .card-highlight {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px #3b82f644, 0 4px 20px #00000030;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .card-center {
+            text-align: center;
+        }
+
+        .balance-display {
+            text-align: center;
+            padding: 24px 16px 20px;
+            background: linear-gradient(145deg, #111827 0%, #1a2338 100%);
+            border: 1.5px solid #2a3a5c;
+            border-radius: var(--box-radius);
+            margin-bottom: 14px;
+            box-shadow: 0 0 40px #3b82f622, inset 0 1px 0 #ffffff10;
+        }
+        .balance-display .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .balance-display .amount {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 4px 0 2px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+        .balance-display .currency {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fbbf24;
+            -webkit-text-fill-color: #fbbf24;
+        }
+        .balance-display .dollar-sign {
+            font-size: 30px;
+            font-weight: 800;
+            color: #fbbf24;
+            -webkit-text-fill-color: #fbbf24;
+            vertical-align: super;
+        }
+
+        .two-box-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .two-box-row .card {
+            margin-bottom: 0;
+            text-align: center;
+            padding: 22px 12px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .two-box-row .card .icon {
+            font-size: 38px;
+            margin-bottom: 8px;
+        }
+        .two-box-row .card .box-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        .two-box-row .card .box-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 3px;
+        }
+        .watch-earn .box-title {
+            color: #60a5fa;
+        }
+        .spin-win .box-title {
+            color: #f59e0b;
+        }
+        .invite-earn .box-title {
+            color: #f472b6;
+        }
+
+        .invite-center {
+            text-align: center;
+            padding: 22px 16px;
+            background: linear-gradient(145deg, #1a0f2e 0%, #111827 100%);
+            border: 1.5px solid #4c1d95;
+            border-radius: var(--box-radius);
+            margin-bottom: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 30px #a855f733;
+        }
+        .invite-center .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .invite-center .box-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #c084fc;
+            letter-spacing: 0.3px;
+        }
+        .invite-center .box-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 3px;
+        }
+
+        .tx-history {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 16px;
+        }
+        .tx-history .tx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .tx-history .tx-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        .tx-history .tx-badge {
+            background: #1e293b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            border: 1px solid #2a3a5c;
+        }
+        .tx-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        .tx-item:last-child {
+            border-bottom: none;
+        }
+        .tx-item .tx-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tx-item .tx-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .tx-item .tx-name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .tx-item .tx-date {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .tx-item .tx-amount {
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .tx-item .tx-amount.positive {
+            color: var(--green);
+        }
+        .tx-item .tx-amount.negative {
+            color: var(--red);
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--nav-bg);
+            border-top: 2px solid #1e293b;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            z-index: 20;
+            padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -4px 20px #00000060;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 2px;
+            cursor: pointer;
+            border-radius: 14px;
+            transition: all 0.25s;
+            border: 1.5px solid transparent;
+            gap: 2px;
+        }
+        .nav-item .nav-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+        .nav-item .nav-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: var(--text-muted);
+            transition: color 0.25s;
+        }
+        .nav-item.active {
+            background: #1e293b;
+            border-color: #2a3a5c;
+        }
+        .nav-item.active .nav-label {
+            color: var(--accent);
+        }
+        .nav-item:active {
+            transform: scale(0.9);
+        }
+
+        .mining-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .mining-stat-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 14px 12px;
+            text-align: center;
+        }
+        .mining-stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 900;
+            margin-top: 3px;
+        }
+        .mining-stat-card .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .plan-card:active {
+            transform: scale(0.97);
+        }
+        .plan-card .plan-info {
+            flex: 1;
+        }
+        .plan-card .plan-name {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        .plan-card .plan-detail {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .plan-card .plan-price {
+            font-size: 18px;
+            font-weight: 900;
+            color: #fbbf24;
+            text-align: right;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+        .plan-card .plan-price .price-suffix {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .plan-card.silver {
+            border-color: #94a3b8;
+            background: #1a1f2e;
+        }
+        .plan-card.gold {
+            border-color: #f59e0b;
+            background: #1f1a0e;
+        }
+        .plan-card.premium {
+            border-color: #a855f7;
+            background: #1a0f2e;
+        }
+
+        .withdraw-box {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 20px 16px;
+            margin-bottom: 14px;
+        }
+        .withdraw-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+        .withdraw-box input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #2a3a5c;
+            background: #0f172a;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .withdraw-box input:focus {
+            border-color: var(--accent);
+        }
+        .withdraw-box .hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px #3b82f644;
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px #3b82f622;
+        }
+
+        .profile-header {
+            text-align: center;
+            padding: 20px 16px;
+            background: linear-gradient(145deg, #111827, #1a2338);
+            border-radius: var(--box-radius);
+            border: 1.5px solid #2a3a5c;
+            margin-bottom: 14px;
+        }
+        .profile-header .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #2a3a5c;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: #fbbf24;
+            border: 3px solid #fbbf24;
+        }
+        .profile-header .profile-name {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+        }
+        .profile-header .profile-id {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .profile-menu .card {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+            border-radius: var(--box-radius);
+        }
+        .profile-menu .card:active {
+            transform: scale(0.97);
+        }
+        .profile-menu .card .arrow {
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+        .profile-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #111827;
+            border: 2px solid #2a3a5c;
+            border-radius: 24px;
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 0 60px #000000cc;
+        }
+        .modal-box h3 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        .modal-box p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .modal-box .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: #1e293b;
+            border: 1.5px solid #2a3a5c;
+            color: var(--text);
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .modal-box .btn-secondary:active {
+            transform: scale(0.95);
+        }
+        .ad-timer {
+            font-size: 40px;
+            font-weight: 900;
+            color: #fbbf24;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="phone-frame">
@@ -132,21 +761,21 @@
                     <div class="card-title">Available Plans</div>
                     <div class="card-sub">Increase speed, earn faster</div>
                 </div>
-                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)">
+                <div class="plan-card silver" onclick="selectPlan('Silver', 25, 10)">
                     <div class="plan-info">
                         <div class="plan-name">🥈 Silver Plan</div>
                         <div class="plan-detail">10x speed • Reward $0.05/session</div>
                     </div>
                     <div class="plan-price">$25<span class="price-suffix">/plan</span></div>
                 </div>
-                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)">
+                <div class="plan-card gold" onclick="selectPlan('Gold', 60, 15)">
                     <div class="plan-info">
                         <div class="plan-name">🥇 Gold Plan</div>
                         <div class="plan-detail">15x speed • Reward $0.05/session</div>
                     </div>
                     <div class="plan-price">$60<span class="price-suffix">/plan</span></div>
                 </div>
-                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)">
+                <div class="plan-card premium" onclick="selectPlan('Premium', 100, 20)">
                     <div class="plan-info">
                         <div class="plan-name">💎 Premium Plan</div>
                         <div class="plan-detail">20x speed • Reward $0.05/session</div>
@@ -183,12 +812,30 @@
                     <div class="profile-id">Telegram ID: @rahul_12345</div>
                 </div>
                 <div class="profile-menu">
-                    <div class="card" onclick="alert('Account Details')"><span>📋 Account Details</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Security')"><span>🔐 Security</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Terms & Conditions')"><span>📄 Terms & Conditions</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Privacy & Policy')"><span>🛡️ Privacy & Policy</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="alert('Help & Support')"><span>🆘 Help & Support</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="logout()"><span>🚪 Logout</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Account Details')">
+                        <span>📋 Account Details</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="card" onclick="alert('Security')">
+                        <span>🔐 Security</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="card" onclick="alert('Terms & Conditions')">
+                        <span>📄 Terms & Conditions</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="card" onclick="alert('Privacy & Policy')">
+                        <span>🛡️ Privacy & Policy</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="card" onclick="alert('Help & Support')">
+                        <span>🆘 Help & Support</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="card" onclick="logout()">
+                        <span>🚪 Logout</span>
+                        <span class="arrow">›</span>
+                    </div>
                 </div>
                 <div class="profile-footer">Support Team</div>
             </div>
@@ -196,11 +843,26 @@
 
         <!-- BOTTOM NAVIGATION -->
         <div class="bottom-nav">
-            <div class="nav-item active" data-section="home-section" onclick="switchSection('home-section')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
-            <div class="nav-item" data-section="refer-section" onclick="switchSection('refer-section')"><span class="nav-icon">📨</span><span class="nav-label">Refer</span></div>
-            <div class="nav-item" data-section="mining-section" onclick="switchSection('mining-section')"><span class="nav-icon">⛏️</span><span class="nav-label">Mining</span></div>
-            <div class="nav-item" data-section="withdraw-section" onclick="switchSection('withdraw-section')"><span class="nav-icon">💰</span><span class="nav-label">Withdraw</span></div>
-            <div class="nav-item" data-section="profile-section" onclick="switchSection('profile-section')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
+            <div class="nav-item active" data-section="home-section" onclick="switchSection('home-section')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item" data-section="refer-section" onclick="switchSection('refer-section')">
+                <span class="nav-icon">📨</span>
+                <span class="nav-label">Refer</span>
+            </div>
+            <div class="nav-item" data-section="mining-section" onclick="switchSection('mining-section')">
+                <span class="nav-icon">⛏️</span>
+                <span class="nav-label">Mining</span>
+            </div>
+            <div class="nav-item" data-section="withdraw-section" onclick="switchSection('withdraw-section')">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">Withdraw</span>
+            </div>
+            <div class="nav-item" data-section="profile-section" onclick="switchSection('profile-section')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profile</span>
+            </div>
         </div>
     </div>
 
@@ -214,7 +876,175 @@
         </div>
     </div>
 
-    <!-- Main JS -->
-    <script src="js/main.js"></script>
+    <script>
+        // Sample data
+        let totalBalance = 5.75; // in dollars
+        let selectedPlan = 'Free';
+        let planSpeed = 1; // 1x for free
+        let miningActive = false;
+        let miningTimerInterval = null;
+        let miningRemaining = 3 * 3600; // 3 hours in seconds
+        let adWatched = false;
+        let adTimerInterval = null;
+        let totalReferrals = 3;
+        let rewardEarned = 0.30; // from referrals
+
+        // Update UI on load
+        function updateBalances() {
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+            document.getElementById('withdrawBalance').textContent = totalBalance.toFixed(2);
+            document.getElementById('totalReferrals').textContent = totalReferrals;
+            document.getElementById('rewardEarned').textContent = '$' + rewardEarned.toFixed(2);
+        }
+
+        // Navigation
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelector(`.nav-item[data-section="${sectionId}"]`).classList.add('active');
+            document.querySelector('.page-container').scrollTop = 0;
+        }
+
+        // Referral copy
+        function copyReferLink() {
+            const link = document.getElementById('referLink').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = link;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Link copied!');
+            }
+        }
+
+        // Mining functions
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateMiningTimerDisplay() {
+            document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+        }
+
+        function startMining() {
+            if (miningActive) {
+                alert('Mining is already running!');
+                return;
+            }
+            if (!adWatched) {
+                showAdModal();
+                return;
+            }
+            // Start mining session
+            miningActive = true;
+            miningRemaining = Math.floor(3 * 3600 / planSpeed);
+            document.getElementById('startMiningBtn').textContent = '⏳ Mining in progress...';
+            document.getElementById('startMiningBtn').disabled = true;
+            updateMiningTimerDisplay();
+            miningTimerInterval = setInterval(() => {
+                if (miningRemaining <= 0) {
+                    clearInterval(miningTimerInterval);
+                    miningActive = false;
+                    totalBalance += 0.05;
+                    updateBalances();
+                    document.getElementById('startMiningBtn').textContent = 'Start Mining';
+                    document.getElementById('startMiningBtn').disabled = false;
+                    document.getElementById('miningTimer').textContent = '03:00:00';
+                    alert('✅ Mining complete! You earned $0.05.');
+                    adWatched = false;
+                } else {
+                    miningRemaining--;
+                    updateMiningTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function showAdModal() {
+            const modal = document.getElementById('adModal');
+            modal.classList.add('active');
+            let adTime = 5;
+            document.getElementById('adTimer').textContent = adTime;
+            document.getElementById('adSkipBtn').disabled = true;
+            document.getElementById('adSkipBtn').textContent = 'Please wait...';
+            clearInterval(adTimerInterval);
+            adTimerInterval = setInterval(() => {
+                adTime--;
+                document.getElementById('adTimer').textContent = adTime;
+                if (adTime <= 0) {
+                    clearInterval(adTimerInterval);
+                    document.getElementById('adSkipBtn').disabled = false;
+                    document.getElementById('adSkipBtn').textContent = 'Close Ad';
+                }
+            }, 1000);
+        }
+
+        function skipAd() {
+            clearInterval(adTimerInterval);
+            document.getElementById('adModal').classList.remove('active');
+            adWatched = true;
+            if (!miningActive) {
+                startMining();
+            }
+        }
+
+        function selectPlan(planName, price, speedMultiplier) {
+            if (planName === selectedPlan) {
+                alert('This plan is already selected');
+                return;
+            }
+            selectedPlan = planName;
+            planSpeed = speedMultiplier;
+            document.getElementById('currentPlan').textContent = planName;
+            alert(`${planName} plan activated (Demo) - Speed ${speedMultiplier}x`);
+            if (!miningActive) {
+                miningRemaining = Math.floor(3 * 3600 / planSpeed);
+                updateMiningTimerDisplay();
+            } else {
+                alert('Mining is active, next session will use new speed');
+            }
+        }
+
+        // Withdraw
+        function withdraw() {
+            const address = document.getElementById('usdtAddress').value.trim();
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            if (!address) {
+                alert('Please enter USDT address');
+                return;
+            }
+            if (isNaN(amount) || amount !== 25) {
+                alert('Withdrawal amount must be $25 only');
+                return;
+            }
+            if (totalBalance < 25) {
+                alert('Your balance is less than $25');
+                return;
+            }
+            totalBalance -= 25;
+            updateBalances();
+            document.getElementById('usdtAddress').value = '';
+            alert('✅ Withdrawal request successful! $25 will be sent.');
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logged out (Demo)');
+            }
+        }
+
+        // Initialize
+        updateBalances();
+        document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+        adWatched = false;
+    </script>
 </body>
 </html>
