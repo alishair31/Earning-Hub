@@ -1,629 +1,1256 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Earn App - Home</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EARNING HUB - Mini App</title>
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --card-bg: #111827;
+            --card-border: #1f2a44;
+            --accent: #3b82f6;
+            --gold: #f59e0b;
+            --silver: #94a3b8;
+            --premium: #a855f7;
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --nav-bg: #0f172a;
+            --box-radius: 16px;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
 
-    body {
-      background: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      padding: 20px 10px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .app-container {
-      max-width: 480px;
-      width: 100%;
-      background: #fff;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            overflow-x: hidden;
+        }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+        .phone-frame {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 900px;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 60px #00000080;
+            border-radius: 24px;
+            border: 2px solid #1e293b;
+        }
 
-    .header h1 {
-      font-size: 22px;
-      color: #1a1a2e;
-    }
+        @media (max-width: 430px) {
+            .phone-frame {
+                border-radius: 0;
+                border: none;
+                max-height: 100vh;
+            }
+        }
 
-    .points-badge {
-      background: linear-gradient(135deg, #ffd700, #ffb347);
-      padding: 10px 16px;
-      border-radius: 30px;
-      font-weight: bold;
-      color: #1a1a2e;
-      font-size: 16px;
-      box-shadow: 0 4px 10px rgba(255, 180, 0, 0.4);
-    }
+        .app-header {
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            padding: 16px 20px 14px;
+            text-align: center;
+            border-bottom: 1px solid #1e293b;
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .app-header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-header .subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+            font-weight: 600;
+        }
 
-    .section-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 20px 0 12px;
-      color: #2d3436;
-      border-left: 5px solid #6c5ce7;
-      padding-left: 10px;
-    }
+        .page-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px 90px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .page-container::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
 
-    /* Watch & Earn Section */
-    .ads-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+        .section {
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+        .section.active {
+            display: block;
+        }
 
-    .ad-card {
-      background: #f8f9fa;
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: 0.2s;
-      border: 1px solid #e0e0e0;
-    }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    .ad-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-    }
+        .card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 18px 16px;
+            margin-bottom: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:active { transform: scale(0.97); }
+        .card-highlight {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px #3b82f644, 0 4px 20px #00000030;
+        }
 
-    .ad-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
+        .card-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
 
-    .ad-name {
-      font-weight: 600;
-      font-size: 16px;
-      color: #2d3436;
-    }
+        .balance-display {
+            text-align: center;
+            padding: 24px 16px 20px;
+            background: linear-gradient(145deg, #111827 0%, #1a2338 100%);
+            border: 1.5px solid #2a3a5c;
+            border-radius: var(--box-radius);
+            margin-bottom: 14px;
+            box-shadow: 0 0 40px #3b82f622, inset 0 1px 0 #ffffff10;
+        }
+        .balance-display .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .balance-display .amount {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 4px 0 2px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
 
-    .ad-limit {
-      font-size: 13px;
-      color: #636e72;
-      background: #eee;
-      padding: 4px 8px;
-      border-radius: 12px;
-    }
+        .points-display {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #a78bfa;
+        }
+        .points-display span {
+            font-size: 22px;
+            font-weight: 900;
+            color: #c084fc;
+        }
 
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #e0e0e0;
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
+        .two-box-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .two-box-row .card {
+            margin-bottom: 0;
+            text-align: center;
+            padding: 22px 12px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .two-box-row .card .icon { font-size: 38px; margin-bottom: 8px; }
+        .two-box-row .card .box-title { font-size: 16px; font-weight: 800; letter-spacing: 0.3px; }
+        .two-box-row .card .box-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 3px; }
+        .watch-earn .box-title { color: #60a5fa; }
+        .spin-win .box-title { color: #f59e0b; }
 
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6c5ce7, #a29bfe);
-      border-radius: 10px;
-      transition: width 0.3s;
-      width: 0%;
-    }
+        .invite-center {
+            text-align: center;
+            padding: 22px 16px;
+            background: linear-gradient(145deg, #1a0f2e 0%, #111827 100%);
+            border: 1.5px solid #4c1d95;
+            border-radius: var(--box-radius);
+            margin-bottom: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 30px #a855f733;
+        }
+        .invite-center .icon { font-size: 40px; margin-bottom: 8px; }
+        .invite-center .box-title { font-size: 18px; font-weight: 800; color: #c084fc; letter-spacing: 0.3px; }
+        .invite-center .box-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 3px; }
 
-    .watch-btn {
-      background: #6c5ce7;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      width: 100%;
-      font-size: 14px;
-    }
+        .tx-history {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 16px;
+        }
+        .tx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .tx-title { font-size: 17px; font-weight: 800; letter-spacing: 0.3px; }
+        .tx-badge {
+            background: #1e293b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            border: 1px solid #2a3a5c;
+        }
+        .tx-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        .tx-item:last-child { border-bottom: none; }
+        .tx-info { display: flex; align-items: center; gap: 10px; }
+        .tx-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .tx-name { font-size: 14px; font-weight: 700; }
+        .tx-date { font-size: 11px; color: var(--text-muted); }
+        .tx-amount { font-size: 15px; font-weight: 800; }
+        .tx-amount.positive { color: var(--green); }
+        .tx-amount.negative { color: var(--red); }
 
-    .watch-btn:hover:not(:disabled) {
-      background: #5f3dc4;
-    }
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--nav-bg);
+            border-top: 2px solid #1e293b;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            z-index: 20;
+            padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -4px 20px #00000060;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 2px;
+            cursor: pointer;
+            border-radius: 14px;
+            transition: all 0.25s;
+            border: 1.5px solid transparent;
+            gap: 2px;
+        }
+        .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+        .nav-item .nav-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: var(--text-muted);
+            transition: color 0.25s;
+        }
+        .nav-item.active {
+            background: #1e293b;
+            border-color: #2a3a5c;
+        }
+        .nav-item.active .nav-label { color: var(--accent); }
+        .nav-item:active { transform: scale(0.9); }
 
-    .watch-btn:disabled {
-      background: #b2bec3;
-      cursor: not-allowed;
-    }
+        .mining-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .mining-stat-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 14px 12px;
+            text-align: center;
+        }
+        .stat-value { font-size: 22px; font-weight: 900; margin-top: 3px; }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    /* Spin Section */
-    .wheel-wrapper {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 15px 0;
-    }
+        .plan-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .plan-card:active { transform: scale(0.97); }
+        .plan-info { flex: 1; }
+        .plan-name { font-size: 16px; font-weight: 800; letter-spacing: 0.3px; }
+        .plan-detail { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+        .plan-price {
+            font-size: 18px;
+            font-weight: 900;
+            color: #fbbf24;
+            text-align: right;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+        .price-suffix { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+        .plan-card.silver { border-color: #94a3b8; background: #1a1f2e; }
+        .plan-card.gold { border-color: #f59e0b; background: #1f1a0e; }
+        .plan-card.premium { border-color: #a855f7; background: #1a0f2e; }
 
-    .wheel-container {
-      position: relative;
-      width: 280px;
-      height: 280px;
-    }
+        .withdraw-box {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: var(--box-radius);
+            padding: 20px 16px;
+            margin-bottom: 14px;
+        }
+        .withdraw-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+        .withdraw-box input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #2a3a5c;
+            background: #0f172a;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .withdraw-box input:focus { border-color: var(--accent); }
+        .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 
-    canvas {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      box-shadow: 0 0 0 8px #fff, 0 0 0 12px #6c5ce7;
-      transition: transform 4s cubic-bezier(0.25, 0.1, 0.15, 1);
-      will-change: transform;
-    }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px #3b82f644;
+        }
+        .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 10px #3b82f622; }
 
-    .pointer {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-top: 25px solid #e74c3c;
-      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.3));
-      z-index: 10;
-    }
+        .profile-header {
+            text-align: center;
+            padding: 20px 16px;
+            background: linear-gradient(145deg, #111827, #1a2338);
+            border-radius: var(--box-radius);
+            border: 1.5px solid #2a3a5c;
+            margin-bottom: 14px;
+        }
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #2a3a5c;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 900;
+            color: #fbbf24;
+            border: 3px solid #fbbf24;
+        }
+        .profile-name { font-size: 20px; font-weight: 900; letter-spacing: 0.3px; }
+        .profile-id { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+        .profile-menu .card {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+            border-radius: var(--box-radius);
+        }
+        .profile-menu .card:active { transform: scale(0.97); }
+        .profile-menu .card .arrow { font-size: 18px; color: var(--text-muted); }
+        .profile-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
 
-    .spin-btn {
-      background: linear-gradient(135deg, #e74c3c, #c0392b);
-      color: white;
-      border: none;
-      padding: 14px 35px;
-      border-radius: 30px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-      transition: 0.2s;
-    }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #111827;
+            border: 2px solid #2a3a5c;
+            border-radius: 24px;
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 0 60px #000000cc;
+        }
+        .modal-box h3 { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+        .modal-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; font-weight: 500; }
+        .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: #1e293b;
+            border: 1.5px solid #2a3a5c;
+            color: var(--text);
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-secondary:active { transform: scale(0.95); }
+        .ad-timer { font-size: 40px; font-weight: 900; color: #fbbf24; margin: 10px 0; }
 
-    .spin-btn:disabled {
-      background: #b2bec3;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
+        /* Watch & Earn section */
+        .watch-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .watch-box:active { transform: scale(0.97); }
+        .watch-box .watch-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .watch-box .watch-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .watch-box .watch-name {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        .watch-box .watch-limit {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .watch-box .watch-count {
+            font-size: 18px;
+            font-weight: 900;
+            color: #a78bfa;
+        }
+        .simple-ad .watch-icon { background: #1e293b; color: #60a5fa; }
+        .pro-ad .watch-icon { background: #1f1a0e; color: #f59e0b; }
+        .sponsor-ad .watch-icon { background: #1a0f2e; color: #a855f7; }
 
-    /* Invite Section */
-    .invite-card {
-      background: #f8f9fa;
-      border-radius: 15px;
-      padding: 20px;
-      border: 1px dashed #6c5ce7;
-      text-align: center;
-    }
-
-    .invite-link {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      margin: 10px 0;
-      font-size: 14px;
-      background: white;
-    }
-
-    .copy-btn {
-      background: #00b894;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .copy-btn:hover {
-      background: #009e7c;
-    }
-
-    /* Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal-box {
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      text-align: center;
-      max-width: 300px;
-      width: 90%;
-      animation: pop 0.3s ease;
-    }
-
-    @keyframes pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .modal-box h3 {
-      font-size: 22px;
-      margin-bottom: 10px;
-      color: #2d3436;
-    }
-
-    .modal-box p {
-      color: #636e72;
-      margin-bottom: 20px;
-    }
-
-    .close-modal {
-      background: #6c5ce7;
-      color: white;
-      border: none;
-      padding: 10px 30px;
-      border-radius: 25px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #2d3436;
-      color: white;
-      padding: 12px 25px;
-      border-radius: 30px;
-      font-size: 14px;
-      opacity: 0;
-      transition: 0.3s;
-      pointer-events: none;
-      z-index: 2000;
-    }
-
-    .toast.show {
-      opacity: 1;
-    }
-  </style>
+        /* Spin wheel */
+        .wheel-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 20px auto;
+        }
+        .wheel-container canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid #2a3a5c;
+            box-shadow: 0 0 40px #3b82f622, inset 0 0 20px #00000080;
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #fbbf24;
+            filter: drop-shadow(0 0 6px #fbbf24);
+            z-index: 5;
+        }
+        .spin-result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: 900;
+            color: #c084fc;
+        }
+    </style>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="app-container">
-    <div class="header">
-      <h1>🏠 Home</h1>
-      <div class="points-badge">🪙 <span id="totalPoints">0</span> Points</div>
+    <div class="phone-frame">
+        <div class="app-header">
+            <h1>⚡ EARNING HUB</h1>
+            <div class="subtitle">Mine • Refer • Earn</div>
+        </div>
+
+        <div class="page-container">
+            <!-- HOME SECTION -->
+            <div class="section active" id="home-section">
+                <div class="balance-display">
+                    <div class="label">Total Balance</div>
+                    <div class="amount">$<span id="totalBalance">0.00</span></div>
+                    <div class="points-display">🪙 Points: <span id="totalPoints">0</span></div>
+                </div>
+
+                <div class="two-box-row">
+                    <div class="card watch-earn" onclick="switchSection('watch-earn-section')">
+                        <div class="icon">📺</div>
+                        <div class="box-title">Watch and Earn</div>
+                        <div class="box-sub">Watch videos, earn points</div>
+                    </div>
+                    <div class="card spin-win" onclick="switchSection('spin-win-section')">
+                        <div class="icon">🎡</div>
+                        <div class="box-title">Spin and Win</div>
+                        <div class="box-sub">Spin and win rewards</div>
+                    </div>
+                </div>
+
+                <div class="invite-center" onclick="switchSection('refer-section')">
+                    <div class="icon">📨</div>
+                    <div class="box-title">Invite and Earn</div>
+                    <div class="box-sub">Invite friends, earn $0.1</div>
+                </div>
+
+                <div class="tx-history">
+                    <div class="tx-header">
+                        <span class="tx-title">Transaction History</span>
+                        <span class="tx-badge">Last 5</span>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info">
+                            <div class="tx-icon">⛏️</div>
+                            <div>
+                                <div class="tx-name">Mining Reward</div>
+                                <div class="tx-date">Today, 10:30</div>
+                            </div>
+                        </div>
+                        <div class="tx-amount positive">+$0.05</div>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info">
+                            <div class="tx-icon">📨</div>
+                            <div>
+                                <div class="tx-name">Referral Bonus</div>
+                                <div class="tx-date">Yesterday, 18:45</div>
+                            </div>
+                        </div>
+                        <div class="tx-amount positive">+$0.10</div>
+                    </div>
+                    <div class="tx-item">
+                        <div class="tx-info">
+                            <div class="tx-icon">💳</div>
+                            <div>
+                                <div class="tx-name">Withdrawal</div>
+                                <div class="tx-date">2 days ago</div>
+                            </div>
+                        </div>
+                        <div class="tx-amount negative">-$25.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WATCH & EARN SECTION -->
+            <div class="section" id="watch-earn-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="text-align:center;">📺 Watch and Earn</h2>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Watch ads and earn 25 points each. Daily limit: 25 ads per type.</p>
+                </div>
+                <div class="card simple-ad watch-box" onclick="watchAd('simple')">
+                    <div class="watch-info">
+                        <div class="watch-icon">▶️</div>
+                        <div>
+                            <div class="watch-name">Simple Ads</div>
+                            <div class="watch-limit">Limit: 25/day • Reward: 25 pts</div>
+                        </div>
+                    </div>
+                    <div class="watch-count" id="simple-count">0/25</div>
+                </div>
+                <div class="card pro-ad watch-box" onclick="watchAd('pro')">
+                    <div class="watch-info">
+                        <div class="watch-icon">⚡</div>
+                        <div>
+                            <div class="watch-name">Pro Ads</div>
+                            <div class="watch-limit">Limit: 25/day • Reward: 25 pts</div>
+                        </div>
+                    </div>
+                    <div class="watch-count" id="pro-count">0/25</div>
+                </div>
+                <div class="card sponsor-ad watch-box" onclick="watchAd('sponsor')">
+                    <div class="watch-info">
+                        <div class="watch-icon">🤝</div>
+                        <div>
+                            <div class="watch-name">Sponsor Ads</div>
+                            <div class="watch-limit">Limit: 25/day • Reward: 25 pts</div>
+                        </div>
+                    </div>
+                    <div class="watch-count" id="sponsor-count">0/25</div>
+                </div>
+            </div>
+
+            <!-- SPIN & WIN SECTION -->
+            <div class="section" id="spin-win-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="text-align:center;">🎡 Spin and Win</h2>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Spin the wheel to win points. $25 and $50 are display only.</p>
+                </div>
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheelCanvas" width="280" height="280"></canvas>
+                </div>
+                <button class="btn-primary" id="spinBtn" onclick="spinWheel()">SPIN NOW</button>
+                <div class="spin-result" id="spinResult"></div>
+            </div>
+
+            <!-- REFER SECTION -->
+            <div class="section" id="refer-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="font-size:20px; text-align:center;">📨 Refer & Earn</h2>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Share your link and earn $0.1 + 50 Ads bonus</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Your Referral Link</div>
+                    <div style="background:#0f172a; border:1.5px solid #2a3a5c; border-radius:12px; padding:12px; margin-top:8px; font-weight:700; word-break:break-all;" id="referLink">https://newearn.app/ref/user12345</div>
+                    <button class="btn-primary" style="margin-top:12px;" onclick="copyReferLink()">Copy Link</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 Stats</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <div><strong>Total Referrals</strong><br><span id="totalReferrals">0</span></div>
+                        <div><strong>Reward Earned</strong><br><span id="rewardEarned">$0.00</span></div>
+                        <div><strong>Limit</strong><br>100 users</div>
+                    </div>
+                </div>
+                <div class="card" style="background:#1a0f2e; border-color:#4c1d95;">
+                    <div class="card-sub" style="color:#c084fc;">Rules: Each referral gives $0.1 + 50 Ads must be completed for reward. Maximum reward for 100 users.</div>
+                </div>
+            </div>
+
+            <!-- MINING SECTION -->
+            <div class="section" id="mining-section">
+                <div class="card card-highlight">
+                    <h2 class="card-title" style="text-align:center;">⛏️ Mining</h2>
+                </div>
+                <div class="mining-stats">
+                    <div class="mining-stat-card">
+                        <div class="stat-label">Current Plan</div>
+                        <div class="stat-value" id="currentPlan">Free</div>
+                    </div>
+                    <div class="mining-stat-card">
+                        <div class="stat-label">Session Reward</div>
+                        <div class="stat-value">$0.05</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Mining Session</div>
+                    <div id="miningTimer" style="font-size:32px; font-weight:900; text-align:center; margin:12px 0; color:#fbbf24;">03:00:00</div>
+                    <div class="card-sub" style="text-align:center;">You must watch an ad before starting</div>
+                    <button class="btn-primary" id="startMiningBtn" style="margin-top:12px;" onclick="startMining()">Start Mining</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">Available Plans</div>
+                    <div class="card-sub">Increase speed, earn faster</div>
+                </div>
+                <div class="plan-card silver" onclick="selectPlan('Silver',25,10)">
+                    <div class="plan-info">
+                        <div class="plan-name">🥈 Silver Plan</div>
+                        <div class="plan-detail">10x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$25<span class="price-suffix">/plan</span></div>
+                </div>
+                <div class="plan-card gold" onclick="selectPlan('Gold',60,15)">
+                    <div class="plan-info">
+                        <div class="plan-name">🥇 Gold Plan</div>
+                        <div class="plan-detail">15x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$60<span class="price-suffix">/plan</span></div>
+                </div>
+                <div class="plan-card premium" onclick="selectPlan('Premium',100,20)">
+                    <div class="plan-info">
+                        <div class="plan-name">💎 Premium Plan</div>
+                        <div class="plan-detail">20x speed • Reward $0.05/session</div>
+                    </div>
+                    <div class="plan-price">$100<span class="price-suffix">/plan</span></div>
+                </div>
+            </div>
+
+            <!-- WITHDRAW SECTION -->
+            <div class="section" id="withdraw-section">
+                <div class="balance-display" style="margin-bottom:14px;">
+                    <div class="label">Available Balance</div>
+                    <div class="amount">$<span id="withdrawBalance">0.00</span></div>
+                </div>
+                <div class="withdraw-box">
+                    <label>USDT Wallet Address</label>
+                    <input type="text" id="usdtAddress" placeholder="Enter BEP20 or TRC20 address">
+                    <div class="hint">Network: BEP20 or TRC20 (type above)</div>
+                </div>
+                <div class="withdraw-box">
+                    <label>Withdrawal Amount (USD)</label>
+                    <input type="number" id="withdrawAmount" value="25" min="25" max="25" step="0.01">
+                    <div class="hint">Minimum and maximum withdrawal is $25 only</div>
+                </div>
+                <button class="btn-primary" onclick="withdraw()">Withdraw Request</button>
+                <div style="margin-top:14px; text-align:center; color:var(--text-muted); font-size:12px;">Only $25 can be withdrawn</div>
+            </div>
+
+            <!-- PROFILE SECTION -->
+            <div class="section" id="profile-section">
+                <div class="profile-header">
+                    <div class="avatar">👤</div>
+                    <div class="profile-name">Rahul Sharma</div>
+                    <div class="profile-id">Telegram ID: @rahul_12345</div>
+                </div>
+                <div class="profile-menu">
+                    <div class="card" onclick="alert('Account Details')"><span>📋 Account Details</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Security')"><span>🔐 Security</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Terms & Conditions')"><span>📄 Terms & Conditions</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Privacy & Policy')"><span>🛡️ Privacy & Policy</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="alert('Help & Support')"><span>🆘 Help & Support</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="logout()"><span>🚪 Logout</span><span class="arrow">›</span></div>
+                </div>
+                <div class="profile-footer">Support Team</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-section="home-section" onclick="switchSection('home-section')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
+            <div class="nav-item" data-section="refer-section" onclick="switchSection('refer-section')"><span class="nav-icon">📨</span><span class="nav-label">Refer</span></div>
+            <div class="nav-item" data-section="mining-section" onclick="switchSection('mining-section')"><span class="nav-icon">⛏️</span><span class="nav-label">Mining</span></div>
+            <div class="nav-item" data-section="withdraw-section" onclick="switchSection('withdraw-section')"><span class="nav-icon">💰</span><span class="nav-label">Withdraw</span></div>
+            <div class="nav-item" data-section="profile-section" onclick="switchSection('profile-section')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
+        </div>
     </div>
 
-    <!-- Watch and Earn Section -->
-    <div class="section-title">📺 Watch and Earn</div>
-    <div class="ads-container">
-      <!-- Simple Ads -->
-      <div class="ad-card">
-        <div class="ad-header">
-          <span class="ad-name">Simple Ads</span>
-          <span class="ad-limit" id="simpleLimitLabel">0/25</span>
+    <!-- AD MODAL (for mining & watch ads) -->
+    <div class="modal-overlay" id="adModal">
+        <div class="modal-box">
+            <h3>📺 Watch Ad</h3>
+            <p>Please complete the ad to continue</p>
+            <div class="ad-timer" id="adTimer">5</div>
+            <button class="btn-secondary" id="adSkipBtn" onclick="skipAd()" disabled>Please wait...</button>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="simpleProgress"></div>
-        </div>
-        <button class="watch-btn" id="simpleBtn">Watch Ad (+25 Points)</button>
-      </div>
-
-      <!-- Pro Ads -->
-      <div class="ad-card">
-        <div class="ad-header">
-          <span class="ad-name">Pro Ads</span>
-          <span class="ad-limit" id="proLimitLabel">0/25</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="proProgress"></div>
-        </div>
-        <button class="watch-btn" id="proBtn">Watch Ad (+25 Points)</button>
-      </div>
-
-      <!-- Sponsor Ads -->
-      <div class="ad-card">
-        <div class="ad-header">
-          <span class="ad-name">Sponsor Ads</span>
-          <span class="ad-limit" id="sponsorLimitLabel">0/25</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="sponsorProgress"></div>
-        </div>
-        <button class="watch-btn" id="sponsorBtn">Watch Ad (+25 Points)</button>
-      </div>
     </div>
 
-    <!-- Spin and Earn Section -->
-    <div class="section-title">🎡 Spin and Earn</div>
-    <div class="wheel-wrapper">
-      <div class="wheel-container">
-        <div class="pointer"></div>
-        <canvas id="wheelCanvas" width="280" height="280"></canvas>
-      </div>
-      <button class="spin-btn" id="spinBtn">SPIN NOW</button>
-    </div>
+    <script>
+        // Firebase configuration (apni values paste karo)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-    <!-- Invite and Ref Section -->
-    <div class="section-title">👥 Invite & Ref</div>
-    <div class="invite-card">
-      <p style="margin-bottom: 5px; color: #2d3436;">अपना Referral Link शेयर करें</p>
-      <input type="text" class="invite-link" id="refLink" value="https://example.com/ref?user=12345" readonly>
-      <button class="copy-btn" id="copyBtn">📋 Copy Link</button>
-      <p id="inviteCount" style="margin-top: 15px; color: #636e72;">Total Invites: 0</p>
-    </div>
-  </div>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-  <!-- Modal -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-box">
-      <h3 id="modalTitle">🎉 Result</h3>
-      <p id="modalMessage"></p>
-      <button class="close-modal" id="closeModal">Okay</button>
-    </div>
-  </div>
+        // Global variables
+        let telegramUser = null;
+        let totalBalance = 0;
+        let totalPoints = 0;
+        let selectedPlan = 'Free';
+        let planSpeed = 1;
+        let miningActive = false;
+        let miningTimerInterval = null;
+        let miningRemaining = 3 * 3600;
+        let adWatched = false;
+        let adTimerInterval = null;
+        let totalReferrals = 0;
+        let rewardEarned = 0;
+        let adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
+        let todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-  <script>
-    // ==================== UTILITY FUNCTIONS ====================
-    const $ = (id) => document.getElementById(id);
-    const DAILY_LIMIT = 25;
-    const POINTS_PER_AD = 25;
-
-    // Get today's date as YYYY-MM-DD
-    function getToday() {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    // Show toast message
-    function showToast(msg) {
-      const toast = $('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-
-    // Show modal
-    function showModal(title, message) {
-      $('modalTitle').textContent = title;
-      $('modalMessage').textContent = message;
-      $('modalOverlay').style.display = 'flex';
-    }
-
-    // Hide modal
-    $('closeModal').addEventListener('click', () => {
-      $('modalOverlay').style.display = 'none';
-    });
-
-    // ==================== POINTS MANAGEMENT ====================
-    let totalPoints = parseInt(localStorage.getItem('earnPoints') || '0');
-    function updatePointsDisplay() {
-      $('totalPoints').textContent = totalPoints;
-      localStorage.setItem('earnPoints', totalPoints);
-    }
-    function addPoints(amount) {
-      totalPoints += amount;
-      updatePointsDisplay();
-    }
-
-    // ==================== DAILY AD LIMITS ====================
-    let adData = JSON.parse(localStorage.getItem('adData') || '{}');
-    // Structure: { date: 'YYYY-MM-DD', simple: 0, pro: 0, sponsor: 0 }
-
-    function resetDailyIfNeeded() {
-      const today = getToday();
-      if (adData.date !== today) {
-        adData = { date: today, simple: 0, pro: 0, sponsor: 0 };
-        localStorage.setItem('adData', JSON.stringify(adData));
-      }
-    }
-
-    function saveAdData() {
-      localStorage.setItem('adData', JSON.stringify(adData));
-    }
-
-    function updateAdUI() {
-      // Simple
-      const simpleCount = adData.simple || 0;
-      $('simpleLimitLabel').textContent = `${simpleCount}/${DAILY_LIMIT}`;
-      $('simpleProgress').style.width = `${(simpleCount / DAILY_LIMIT) * 100}%`;
-      $('simpleBtn').disabled = simpleCount >= DAILY_LIMIT;
-      $('simpleBtn').textContent = simpleCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
-
-      // Pro
-      const proCount = adData.pro || 0;
-      $('proLimitLabel').textContent = `${proCount}/${DAILY_LIMIT}`;
-      $('proProgress').style.width = `${(proCount / DAILY_LIMIT) * 100}%`;
-      $('proBtn').disabled = proCount >= DAILY_LIMIT;
-      $('proBtn').textContent = proCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
-
-      // Sponsor
-      const sponsorCount = adData.sponsor || 0;
-      $('sponsorLimitLabel').textContent = `${sponsorCount}/${DAILY_LIMIT}`;
-      $('sponsorProgress').style.width = `${(sponsorCount / DAILY_LIMIT) * 100}%`;
-      $('sponsorBtn').disabled = sponsorCount >= DAILY_LIMIT;
-      $('sponsorBtn').textContent = sponsorCount >= DAILY_LIMIT ? 'Limit Reached' : 'Watch Ad (+25 Points)';
-    }
-
-    function watchAd(type) {
-      resetDailyIfNeeded();
-      const current = adData[type] || 0;
-      if (current >= DAILY_LIMIT) {
-        showToast('❌ Daily limit पूरी हो गई!');
-        return;
-      }
-      adData[type] = current + 1;
-      saveAdData();
-      addPoints(POINTS_PER_AD);
-      updateAdUI();
-      showToast(`✅ ${type} Ad देखा! +${POINTS_PER_AD} Points`);
-    }
-
-    // Attach ad button events
-    $('simpleBtn').addEventListener('click', () => watchAd('simple'));
-    $('proBtn').addEventListener('click', () => watchAd('pro'));
-    $('sponsorBtn').addEventListener('click', () => watchAd('sponsor'));
-
-    // ==================== SPIN WHEEL ====================
-    const canvas = $('wheelCanvas');
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 130; // Leave margin for border
-
-    // Segment definitions (order clockwise from top)
-    const segments = [
-      { label: '$25', weight: 1, type: 'display', points: 0, color: '#e74c3c' },
-      { label: '$50', weight: 1, type: 'display', points: 0, color: '#9b59b6' },
-      { label: '1000 Pts', weight: 2, type: 'points', points: 1000, color: '#f1c40f' },
-      { label: '100 Pts', weight: 20, type: 'points', points: 100, color: '#2ecc71' },
-      { label: '10 Pts', weight: 40, type: 'points', points: 10, color: '#3498db' },
-      { label: '1 Pt', weight: 36, type: 'points', points: 1, color: '#e67e22' }
-    ];
-
-    const totalWeight = segments.reduce((sum, seg) => sum + seg.weight, 0);
-
-    function drawWheel(rotationAngle = 0) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const startAngle = -Math.PI / 2; // Start from top
-      const segmentAngle = (Math.PI * 2) / segments.length;
-
-      segments.forEach((seg, i) => {
-        const angleStart = startAngle + i * segmentAngle;
-        const angleEnd = angleStart + segmentAngle;
-
-        // Draw segment
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, angleStart, angleEnd);
-        ctx.closePath();
-        ctx.fillStyle = seg.color;
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Draw text
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(angleStart + segmentAngle / 2);
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Segoe UI';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 3;
-        ctx.fillText(seg.label, radius - 10, 5);
-        ctx.restore();
-      });
-
-      // Draw center circle
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      ctx.strokeStyle = '#6c5ce7';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-    }
-
-    // Initial draw
-    drawWheel();
-
-    let isSpinning = false;
-    let currentRotation = 0; // cumulative rotation in degrees
-
-    function getWeightedRandomSegment() {
-      let random = Math.random() * totalWeight;
-      for (let i = 0; i < segments.length; i++) {
-        random -= segments[i].weight;
-        if (random <= 0) return i;
-      }
-      return segments.length - 1;
-    }
-
-    function spinWheel() {
-      if (isSpinning) return;
-      isSpinning = true;
-      $('spinBtn').disabled = true;
-
-      // Determine winning segment
-      const winIndex = getWeightedRandomSegment();
-      const winSegment = segments[winIndex];
-      const segmentAngle = 360 / segments.length;
-      const targetCenterAngle = winIndex * segmentAngle + segmentAngle / 2; // from top
-      // We want to rotate so that targetCenterAngle is at top (0 degrees)
-      // Current rotation mod 360
-      const currentMod = currentRotation % 360;
-      let delta = (360 - targetCenterAngle - currentMod + 360) % 360;
-      // Add 5 full spins for effect
-      const extraSpins = 5 * 360;
-      const newRotation = currentRotation + extraSpins + delta;
-
-      // Apply rotation
-      canvas.style.transition = 'transform 4s cubic-bezier(0.25, 0.1, 0.15, 1)';
-      canvas.style.transform = `rotate(${newRotation}deg)`;
-      currentRotation = newRotation;
-
-      // After animation ends
-      setTimeout(() => {
-        isSpinning = false;
-        $('spinBtn').disabled = false;
-        const msg = winSegment.type === 'points' 
-          ? `🎉 आपको ${winSegment.points} Points मिले!` 
-          : '😅 यह reward सिर्फ display के लिए है, कोई points नहीं मिले।';
-        showModal('Spin Result', msg);
-        if (winSegment.type === 'points') {
-          addPoints(winSegment.points);
+        // Telegram init
+        function initTelegramUser() {
+            const tg = window.Telegram.WebApp;
+            const user = tg.initDataUnsafe?.user;
+            telegramUser = user || { id: 'demo_user', first_name: 'Demo', last_name: 'User', username: 'demo' };
+            
+            document.querySelector('.profile-name').textContent = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
+            document.querySelector('.profile-id').textContent = 'Telegram ID: @' + (telegramUser.username || telegramUser.id);
+            document.querySelector('.avatar').textContent = telegramUser.first_name.charAt(0).toUpperCase();
+            
+            tg.ready();
+            tg.expand();
+            loadUserData();
         }
-      }, 4100);
-    }
 
-    $('spinBtn').addEventListener('click', spinWheel);
+        async function loadUserData() {
+            const userId = telegramUser.id.toString();
+            const userRef = db.collection('users').doc(userId);
+            try {
+                const doc = await userRef.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    totalBalance = data.balance || 0;
+                    totalPoints = data.points || 0;
+                    selectedPlan = data.plan || 'Free';
+                    planSpeed = data.planSpeed || 1;
+                    totalReferrals = data.totalReferrals || 0;
+                    rewardEarned = data.rewardEarned || 0;
+                    if (data.adWatchCounts && data.adWatchDate === todayDate) {
+                        adWatchCounts = data.adWatchCounts;
+                    } else {
+                        adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
+                    }
+                } else {
+                    await userRef.set({
+                        name: telegramUser.first_name + ' ' + (telegramUser.last_name || ''),
+                        username: telegramUser.username || '',
+                        balance: 0,
+                        points: 0,
+                        plan: 'Free',
+                        planSpeed: 1,
+                        totalReferrals: 0,
+                        rewardEarned: 0,
+                        adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
+                        adWatchDate: todayDate,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+            updateUI();
+        }
 
-    // ==================== INVITE & REF ====================
-    let invites = parseInt(localStorage.getItem('inviteCount') || '0');
-    $('inviteCount').textContent = `Total Invites: ${invites}`;
+        function updateUI() {
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
+            document.getElementById('withdrawBalance').textContent = totalBalance.toFixed(2);
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('totalReferrals').textContent = totalReferrals;
+            document.getElementById('rewardEarned').textContent = '$' + rewardEarned.toFixed(2);
+            document.getElementById('currentPlan').textContent = selectedPlan;
+            document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+            document.getElementById('simple-count').textContent = adWatchCounts.simple + '/25';
+            document.getElementById('pro-count').textContent = adWatchCounts.pro + '/25';
+            document.getElementById('sponsor-count').textContent = adWatchCounts.sponsor + '/25';
+            drawWheel();
+        }
 
-    $('copyBtn').addEventListener('click', () => {
-      const refInput = $('refLink');
-      refInput.select();
-      refInput.setSelectionRange(0, 99999);
-      navigator.clipboard.writeText(refInput.value).then(() => {
-        showToast('📋 Referral link copied!');
-        // Simulate new invite (for demo only)
-        invites++;
-        localStorage.setItem('inviteCount', invites);
-        $('inviteCount').textContent = `Total Invites: ${invites}`;
-      }).catch(() => {
-        showToast('❌ Copy failed');
-      });
-    });
+        // Navigation
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const navItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+            if (navItem) navItem.classList.add('active');
+            document.querySelector('.page-container').scrollTop = 0;
+        }
 
-    // ==================== INIT ====================
-    function init() {
-      resetDailyIfNeeded();
-      updateAdUI();
-      updatePointsDisplay();
-    }
-    init();
-  </script>
+        // Copy referral link
+        function copyReferLink() {
+            const link = document.getElementById('referLink').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = link;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Link copied!');
+            }
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // Update mining timer display
+        function updateMiningTimerDisplay() {
+            document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+        }
+
+        // General ad modal functions (used for mining and watch ads)
+        function showAdModal(callback) {
+            const modal = document.getElementById('adModal');
+            modal.classList.add('active');
+            let adTime = 5;
+            document.getElementById('adTimer').textContent = adTime;
+            document.getElementById('adSkipBtn').disabled = true;
+            document.getElementById('adSkipBtn').textContent = 'Please wait...';
+            clearInterval(adTimerInterval);
+            adTimerInterval = setInterval(() => {
+                adTime--;
+                document.getElementById('adTimer').textContent = adTime;
+                if (adTime <= 0) {
+                    clearInterval(adTimerInterval);
+                    document.getElementById('adSkipBtn').disabled = false;
+                    document.getElementById('adSkipBtn').textContent = 'Close Ad';
+                    document.getElementById('adSkipBtn').onclick = () => {
+                        clearInterval(adTimerInterval);
+                        document.getElementById('adModal').classList.remove('active');
+                        if (callback) callback();
+                    };
+                }
+            }, 1000);
+        }
+
+        function skipAd() {
+            // This is a fallback, actual handling in showAdModal's onclick
+        }
+
+        // WATCH ADS
+        async function watchAd(type) {
+            if (adWatchCounts[type] >= 25) {
+                alert('Daily limit reached for this ad type.');
+                return;
+            }
+            showAdModal(async () => {
+                adWatchCounts[type] += 1;
+                totalPoints += 25;
+                await updateUserData();
+                updateUI();
+                alert('✅ You earned 25 points!');
+            });
+        }
+
+        // SPIN WHEEL
+        const wheelSegments = [
+            { label: '$25', color: '#f59e0b', type: 'display', value: 0 },
+            { label: '1000 pts', color: '#a855f7', type: 'points', value: 1000, weight: 5 },
+            { label: '$50', color: '#60a5fa', type: 'display', value: 0 },
+            { label: '1 pt', color: '#22c55e', type: 'points', value: 1, weight: 30 },
+            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 25 },
+            { label: '100 pts', color: '#34d399', type: 'points', value: 100, weight: 15 }
+        ];
+
+        let wheelAngle = 0;
+        let spinning = false;
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 2 - 10;
+            const segmentAngle = (2 * Math.PI) / wheelSegments.length;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < wheelSegments.length; i++) {
+                const startAngle = i * segmentAngle + wheelAngle;
+                const endAngle = startAngle + segmentAngle;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = wheelSegments[i].color;
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Label
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + segmentAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px "Segoe UI", sans-serif';
+                ctx.fillText(wheelSegments[i].label, radius - 15, 6);
+                ctx.restore();
+            }
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+            ctx.strokeStyle = '#2a3a5c';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('spinResult').textContent = 'Spinning...';
+            
+            // Random spin: at least 5 full rotations, plus random angle
+            const fullRotations = 5 + Math.floor(Math.random() * 3);
+            const targetAngle = wheelAngle + fullRotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
+            const duration = 3000;
+            const startTime = performance.now();
+            const startAngle = wheelAngle;
+            const deltaAngle = targetAngle - startAngle;
+            
+            function animateSpin(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+                wheelAngle = startAngle + deltaAngle * eased;
+                drawWheel();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    // Determine result
+                    const normalizedAngle = ((wheelAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                    const segmentAngle = (2 * Math.PI) / wheelSegments.length;
+                    // Pointer at top is -90° (or 270°). We need to find which segment is under pointer.
+                    // The wheel is drawn with segment i from startAngle = i*segmentAngle + wheelAngle.
+                    // Pointer is at top (angle = -PI/2). So we compute pointer angle relative to wheel: pointerAngle = -PI/2.
+                    // Find segment index where pointerAngle lies between startAngle and startAngle+segmentAngle (mod 2PI).
+                    const pointerAngle = -Math.PI / 2;
+                    const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+                    const segIndex = Math.floor(relativeAngle / segmentAngle);
+                    const result = wheelSegments[segIndex];
+                    
+                    if (result.type === 'points') {
+                        totalPoints += result.value;
+                        updateUserData().then(() => {
+                            updateUI();
+                            document.getElementById('spinResult').textContent = `🎉 You won ${result.value} points!`;
+                        });
+                    } else {
+                        document.getElementById('spinResult').textContent = `😅 ${result.label} is display only, try again!`;
+                    }
+                    
+                    spinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+                }
+            }
+            
+            requestAnimationFrame(animateSpin);
+        }
+
+        // MINING
+        async function startMining() {
+            if (miningActive) {
+                alert('Mining is already running!');
+                return;
+            }
+            if (!adWatched) {
+                showAdModal(() => {
+                    adWatched = true;
+                    startMining();
+                });
+                return;
+            }
+            
+            miningActive = true;
+            miningRemaining = Math.floor(3 * 3600 / planSpeed);
+            document.getElementById('startMiningBtn').textContent = '⏳ Mining in progress...';
+            document.getElementById('startMiningBtn').disabled = true;
+            updateMiningTimerDisplay();
+            
+            const userId = telegramUser.id.toString();
+            const sessionRef = db.collection('mining_sessions').doc(userId);
+            await sessionRef.set({
+                startTime: firebase.firestore.FieldValue.serverTimestamp(),
+                plan: selectedPlan,
+                speed: planSpeed,
+                reward: 0.05,
+                status: 'active',
+                userId: userId
+            });
+            
+            miningTimerInterval = setInterval(() => {
+                if (miningRemaining <= 0) {
+                    clearInterval(miningTimerInterval);
+                    miningActive = false;
+                    totalBalance += 0.05;
+                    updateUserData();
+                    sessionRef.update({ status: 'completed', endTime: firebase.firestore.FieldValue.serverTimestamp() });
+                    document.getElementById('startMiningBtn').textContent = 'Start Mining';
+                    document.getElementById('startMiningBtn').disabled = false;
+                    document.getElementById('miningTimer').textContent = '03:00:00';
+                    alert('✅ Mining complete! You earned $0.05.');
+                    adWatched = false;
+                } else {
+                    miningRemaining--;
+                    updateMiningTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        async function selectPlan(planName, price, speedMultiplier) {
+            if (planName === selectedPlan) {
+                alert('This plan is already selected');
+                return;
+            }
+            selectedPlan = planName;
+            planSpeed = speedMultiplier;
+            document.getElementById('currentPlan').textContent = planName;
+            await updateUserData();
+            alert(`${planName} plan activated - Speed ${speedMultiplier}x`);
+            if (!miningActive) {
+                miningRemaining = Math.floor(3 * 3600 / planSpeed);
+                updateMiningTimerDisplay();
+            }
+        }
+
+        async function withdraw() {
+            const address = document.getElementById('usdtAddress').value.trim();
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            if (!address) {
+                alert('Please enter USDT address');
+                return;
+            }
+            if (isNaN(amount) || amount !== 25) {
+                alert('Withdrawal amount must be $25 only');
+                return;
+            }
+            if (totalBalance < 25) {
+                alert('Your balance is less than $25');
+                return;
+            }
+            totalBalance -= 25;
+            await updateUserData();
+            
+            const userId = telegramUser.id.toString();
+            await db.collection('withdrawals').add({
+                userId: userId,
+                address: address,
+                amount: 25,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('usdtAddress').value = '';
+            alert('✅ Withdrawal request submitted!');
+        }
+
+        async function updateUserData() {
+            if (!telegramUser) return;
+            const userId = telegramUser.id.toString();
+            await db.collection('users').doc(userId).update({
+                balance: totalBalance,
+                points: totalPoints,
+                plan: selectedPlan,
+                planSpeed: planSpeed,
+                totalReferrals: totalReferrals,
+                rewardEarned: rewardEarned,
+                adWatchCounts: adWatchCounts,
+                adWatchDate: todayDate
+            });
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logged out (Demo)');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            drawWheel();
+            initTelegramUser();
+        });
+    </script>
 </body>
 </html>
