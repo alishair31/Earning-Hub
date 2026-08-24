@@ -478,7 +478,6 @@
             margin-top: 8px;
         }
         .btn-secondary:active { transform: scale(0.95); }
-        .ad-timer { font-size: 40px; font-weight: 900; color: #fbbf24; margin: 10px 0; }
 
         /* Watch & Earn */
         .watch-box {
@@ -807,13 +806,15 @@
         </div>
     </div>
 
-    <!-- AD MODAL -->
+    <!-- AD MODAL (Monetag SmartLink) -->
     <div class="modal-overlay" id="adModal">
         <div class="modal-box">
             <h3>📺 Watch Ad</h3>
-            <p>Please complete the ad to continue</p>
-            <div class="ad-timer" id="adTimer">5</div>
-            <button class="btn-secondary" id="adSkipBtn" onclick="skipAd()" disabled>Please wait...</button>
+            <p id="adModalText">Please view the ad to continue</p>
+            <div id="adContainer">
+                <!-- Yahan dynamic buttons aayenge -->
+            </div>
+            <button class="btn-secondary" id="adCloseBtn" onclick="closeAdModal()" style="display:none;">Close Ad</button>
         </div>
     </div>
 
@@ -846,8 +847,11 @@
         let rewardEarned = 0;
         let adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
         let todayDate = new Date().toISOString().split('T')[0];
-        let lastSpinTime = null; // timestamp in milliseconds
+        let lastSpinTime = null;
         let spinCooldownInterval = null;
+        let adCallback = null;
+        let monetagSmartLink = 'https://omg10.com/4/11642743'; // Monetag SmartLink
+        let adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL'; // Adsterra SmartLink (baad mein)
 
         // Telegram init
         function initTelegramUser() {
@@ -960,33 +964,45 @@
             document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
         }
 
-        // Ad modal with callback
-        function showAdModal(callback) {
+        // AD MODAL FUNCTIONS (Monetag SmartLink)
+        function showMonetagAd(type, callback) {
+            adCallback = callback;
             const modal = document.getElementById('adModal');
             modal.classList.add('active');
-            let adTime = 5;
-            document.getElementById('adTimer').textContent = adTime;
-            document.getElementById('adSkipBtn').disabled = true;
-            document.getElementById('adSkipBtn').textContent = 'Please wait...';
-            clearInterval(adTimerInterval);
-            adTimerInterval = setInterval(() => {
-                adTime--;
-                document.getElementById('adTimer').textContent = adTime;
-                if (adTime <= 0) {
-                    clearInterval(adTimerInterval);
-                    document.getElementById('adSkipBtn').disabled = false;
-                    document.getElementById('adSkipBtn').textContent = 'Close Ad';
-                    document.getElementById('adSkipBtn').onclick = () => {
-                        clearInterval(adTimerInterval);
-                        document.getElementById('adModal').classList.remove('active');
-                        if (callback) callback();
-                    };
-                }
-            }, 1000);
+            
+            document.getElementById('adModalText').textContent = 'Click below to open the ad, then wait 10 seconds to claim reward.';
+            const container = document.getElementById('adContainer');
+            container.innerHTML = `
+                <button class="btn-primary" onclick="openMonetagLink()">Open Ad</button>
+                <button class="btn-primary" id="claimRewardBtn" disabled style="margin-top:8px;">Claim Reward</button>
+            `;
+            document.getElementById('adCloseBtn').style.display = 'none';
         }
 
-        function skipAd() {
-            // fallback, actual handling in showAdModal's onclick
+        function openMonetagLink() {
+            if (monetagSmartLink && monetagSmartLink !== '') {
+                window.open(monetagSmartLink, '_blank');
+                setTimeout(() => {
+                    const claimBtn = document.getElementById('claimRewardBtn');
+                    if (claimBtn) {
+                        claimBtn.disabled = false;
+                        claimBtn.onclick = () => {
+                            closeAdModal();
+                        };
+                    }
+                }, 10000);
+            } else {
+                alert('Monetag SmartLink URL set nahi hai. Code mein update karo.');
+            }
+        }
+
+        function closeAdModal() {
+            document.getElementById('adModal').classList.remove('active');
+            if (adCallback) {
+                const cb = adCallback;
+                adCallback = null;
+                cb();
+            }
         }
 
         // WATCH ADS
@@ -995,13 +1011,53 @@
                 alert('Daily limit reached for this ad type.');
                 return;
             }
-            showAdModal(async () => {
-                adWatchCounts[type] += 1;
-                totalPoints += 25;
-                await updateUserData();
-                updateUI();
-                alert('✅ You earned 25 points!');
-            });
+            
+            if (type === 'simple' || type === 'pro') {
+                showMonetagAd(type, async () => {
+                    adWatchCounts[type]++;
+                    totalPoints += 25;
+                    await updateUserData();
+                    updateUI();
+                    alert('✅ You earned 25 points!');
+                });
+            } else if (type === 'sponsor') {
+                showSponsoredAd(type, async () => {
+                    adWatchCounts[type]++;
+                    totalPoints += 25;
+                    await updateUserData();
+                    updateUI();
+                    alert('✅ You earned 25 points!');
+                });
+            }
+        }
+
+        // SPONSORED ADS (Monetag + Adsterra)
+        function showSponsoredAd(type, callback) {
+            adCallback = callback;
+            const modal = document.getElementById('adModal');
+            modal.classList.add('active');
+            
+            document.getElementById('adModalText').textContent = 'Please view both ads to get reward.';
+            const container = document.getElementById('adContainer');
+            container.innerHTML = `
+                <button class="btn-primary" onclick="openMonetagLink()">Open Ad 1 (Monetag)</button>
+                <button class="btn-primary" id="openAdsterraBtn" disabled style="margin-top:8px;" onclick="openAdsterraLink()">Open Ad 2 (Adsterra)</button>
+                <button class="btn-primary" id="claimRewardBtn" disabled style="margin-top:8px;">Claim Reward</button>
+            `;
+            document.getElementById('adCloseBtn').style.display = 'none';
+        }
+
+        function openAdsterraLink() {
+            if (adsterraSmartLink && adsterraSmartLink !== 'YOUR_ADSTERRA_SMARTLINK_URL') {
+                window.open(adsterraSmartLink, '_blank');
+                setTimeout(() => {
+                    const claimBtn = document.getElementById('claimRewardBtn');
+                    claimBtn.disabled = false;
+                    claimBtn.onclick = () => closeAdModal();
+                }, 10000);
+            } else {
+                alert('Adsterra SmartLink URL abhi set nahi hai. Please update code.');
+            }
         }
 
         // SPIN WHEEL - ALL SEGMENTS EQUAL + 1 HOUR COOLDOWN
@@ -1073,7 +1129,6 @@
 
         function spinWheel() {
             if (spinning) return;
-            // Check cooldown
             if (isSpinCooldownActive()) {
                 alert('Cooldown active! Please wait 1 hour after your last spin.');
                 return;
@@ -1099,7 +1154,6 @@
                 if (progress < 1) {
                     requestAnimationFrame(animateSpin);
                 } else {
-                    // Determine result based on equal segments
                     const totalWeight = wheelSegments.reduce((sum, seg) => sum + seg.weight, 0);
                     const pointerAngle = -Math.PI / 2;
                     const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
@@ -1118,7 +1172,6 @@
                     
                     const result = wheelSegments[segIndex];
                     
-                    // Since all segments are points
                     totalPoints += result.value;
                     lastSpinTime = Date.now();
                     updateUserData().then(() => {
@@ -1150,16 +1203,23 @@
             return Math.max(cooldownMs - elapsed, 0);
         }
 
+        function formatCooldown(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
         function updateSpinCooldownUI() {
             const btn = document.getElementById('spinBtn');
             const cooldownDiv = document.getElementById('spinCooldown');
             if (isSpinCooldownActive()) {
                 btn.disabled = true;
                 const remaining = getSpinCooldownRemainingMs();
-                const hours = Math.floor(remaining / 3600000);
-                const minutes = Math.floor((remaining % 3600000) / 60000);
-                const seconds = Math.floor((remaining % 60000) / 1000);
-                cooldownDiv.textContent = `⏳ Next spin available in: ${hours}h ${minutes}m ${seconds}s`;
+                const formatted = formatCooldown(remaining);
+                btn.textContent = `⏳ Next spin in ${formatted}`;
+                cooldownDiv.textContent = `⏳ Next spin available in: ${formatted}`;
                 if (!spinCooldownInterval) {
                     spinCooldownInterval = setInterval(() => {
                         const rem = getSpinCooldownRemainingMs();
@@ -1167,18 +1227,19 @@
                             clearInterval(spinCooldownInterval);
                             spinCooldownInterval = null;
                             btn.disabled = false;
+                            btn.textContent = 'SPIN NOW';
                             cooldownDiv.textContent = '';
-                            updateUI(); // refresh
+                            updateUI();
                         } else {
-                            const h = Math.floor(rem / 3600000);
-                            const m = Math.floor((rem % 3600000) / 60000);
-                            const s = Math.floor((rem % 60000) / 1000);
-                            cooldownDiv.textContent = `⏳ Next spin available in: ${h}h ${m}m ${s}s`;
+                            const f = formatCooldown(rem);
+                            btn.textContent = `⏳ Next spin in ${f}`;
+                            cooldownDiv.textContent = `⏳ Next spin available in: ${f}`;
                         }
                     }, 1000);
                 }
             } else {
                 btn.disabled = false;
+                btn.textContent = 'SPIN NOW';
                 cooldownDiv.textContent = '';
                 if (spinCooldownInterval) {
                     clearInterval(spinCooldownInterval);
@@ -1198,7 +1259,7 @@
                 return;
             }
             if (!adWatched) {
-                showAdModal(() => {
+                showMonetagAd('mining', () => {
                     adWatched = true;
                     startMining();
                 });
@@ -1293,7 +1354,6 @@
                 return;
             }
             
-            // 100,000 points = $10, so 1 point = $0.0001
             const pointsToConvert = totalPoints;
             const dollarsToAdd = pointsToConvert * 0.0001;
             
