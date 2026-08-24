@@ -982,15 +982,15 @@
             });
         }
 
-        // SPIN WHEEL (updated segments - only points)
+        // SPIN WHEEL - ALL SEGMENTS EQUAL
         const wheelSegments = [
-            { label: '5 pts', color: '#22c55e', type: 'points', value: 5, weight: 50 },
-            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 35 },
-            { label: '50 pts', color: '#34d399', type: 'points', value: 50, weight: 25 },
-            { label: '100 pts', color: '#60a5fa', type: 'points', value: 100, weight: 15 },
-            { label: '250 pts', color: '#a855f7', type: 'points', value: 250, weight: 5 },
-            { label: '500 pts', color: '#f59e0b', type: 'points', value: 500, weight: 3 },
-            { label: '750 pts', color: '#f97316', type: 'points', value: 750, weight: 2 },
+            { label: '5 pts', color: '#22c55e', type: 'points', value: 5, weight: 1 },
+            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 1 },
+            { label: '50 pts', color: '#34d399', type: 'points', value: 50, weight: 1 },
+            { label: '100 pts', color: '#60a5fa', type: 'points', value: 100, weight: 1 },
+            { label: '250 pts', color: '#a855f7', type: 'points', value: 250, weight: 1 },
+            { label: '500 pts', color: '#f59e0b', type: 'points', value: 500, weight: 1 },
+            { label: '750 pts', color: '#f97316', type: 'points', value: 750, weight: 1 },
             { label: '1000 pts', color: '#ef4444', type: 'points', value: 1000, weight: 1 }
         ];
 
@@ -1072,7 +1072,7 @@
                 if (progress < 1) {
                     requestAnimationFrame(animateSpin);
                 } else {
-                    // Determine result based on weighted segments
+                    // Determine result based on equal segments (but keeping weight logic, all equal)
                     const totalWeight = wheelSegments.reduce((sum, seg) => sum + seg.weight, 0);
                     const pointerAngle = -Math.PI / 2;
                     const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
