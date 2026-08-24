@@ -385,6 +385,13 @@
             box-shadow: 0 4px 20px #3b82f644;
         }
         .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 10px #3b82f622; }
+        .btn-primary:disabled {
+            background: #1e293b;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
 
         .profile-header {
             text-align: center;
@@ -535,6 +542,14 @@
             font-weight: 900;
             color: #c084fc;
         }
+        .spin-cooldown {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fbbf24;
+            min-height: 20px;
+        }
     </style>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -660,13 +675,14 @@
             <div class="section" id="spin-win-section">
                 <div class="card card-highlight">
                     <h2 class="card-title" style="text-align:center;">🎡 Spin and Win</h2>
-                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Spin the wheel to win points!</p>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Spin the wheel to win points! After spin, 1 hour cooldown.</p>
                 </div>
                 <div class="wheel-container">
                     <div class="wheel-pointer"></div>
                     <canvas id="wheelCanvas" width="280" height="280"></canvas>
                 </div>
                 <button class="btn-primary" id="spinBtn" onclick="spinWheel()">SPIN NOW</button>
+                <div class="spin-cooldown" id="spinCooldown"></div>
                 <div class="spin-result" id="spinResult"></div>
             </div>
 
@@ -830,6 +846,8 @@
         let rewardEarned = 0;
         let adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
         let todayDate = new Date().toISOString().split('T')[0];
+        let lastSpinTime = null; // timestamp in milliseconds
+        let spinCooldownInterval = null;
 
         // Telegram init
         function initTelegramUser() {
@@ -859,6 +877,7 @@
                     planSpeed = data.planSpeed || 1;
                     totalReferrals = data.totalReferrals || 0;
                     rewardEarned = data.rewardEarned || 0;
+                    lastSpinTime = data.lastSpinTime || null;
                     if (data.adWatchCounts && data.adWatchDate === todayDate) {
                         adWatchCounts = data.adWatchCounts;
                     } else {
@@ -876,8 +895,10 @@
                         rewardEarned: 0,
                         adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
                         adWatchDate: todayDate,
+                        lastSpinTime: null,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    lastSpinTime = null;
                 }
             } catch (error) {
                 console.error('Error loading user:', error);
@@ -897,6 +918,7 @@
             document.getElementById('pro-count').textContent = adWatchCounts.pro + '/25';
             document.getElementById('sponsor-count').textContent = adWatchCounts.sponsor + '/25';
             drawWheel();
+            updateSpinCooldownUI();
         }
 
         // Navigation
@@ -982,7 +1004,7 @@
             });
         }
 
-        // SPIN WHEEL - ALL SEGMENTS EQUAL
+        // SPIN WHEEL - ALL SEGMENTS EQUAL + 1 HOUR COOLDOWN
         const wheelSegments = [
             { label: '5 pts', color: '#22c55e', type: 'points', value: 5, weight: 1 },
             { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 1 },
@@ -1051,6 +1073,11 @@
 
         function spinWheel() {
             if (spinning) return;
+            // Check cooldown
+            if (isSpinCooldownActive()) {
+                alert('Cooldown active! Please wait 1 hour after your last spin.');
+                return;
+            }
             spinning = true;
             document.getElementById('spinBtn').disabled = true;
             document.getElementById('spinResult').textContent = 'Spinning...';
@@ -1072,7 +1099,7 @@
                 if (progress < 1) {
                     requestAnimationFrame(animateSpin);
                 } else {
-                    // Determine result based on equal segments (but keeping weight logic, all equal)
+                    // Determine result based on equal segments
                     const totalWeight = wheelSegments.reduce((sum, seg) => sum + seg.weight, 0);
                     const pointerAngle = -Math.PI / 2;
                     const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
@@ -1091,11 +1118,13 @@
                     
                     const result = wheelSegments[segIndex];
                     
-                    // Since all segments are points now
+                    // Since all segments are points
                     totalPoints += result.value;
+                    lastSpinTime = Date.now();
                     updateUserData().then(() => {
                         updateUI();
                         document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
+                        startSpinCooldown();
                     });
                     
                     spinning = false;
@@ -1104,6 +1133,62 @@
             }
             
             requestAnimationFrame(animateSpin);
+        }
+
+        function isSpinCooldownActive() {
+            if (!lastSpinTime) return false;
+            const now = Date.now();
+            const cooldownMs = 60 * 60 * 1000; // 1 hour
+            return (now - lastSpinTime) < cooldownMs;
+        }
+
+        function getSpinCooldownRemainingMs() {
+            if (!lastSpinTime) return 0;
+            const now = Date.now();
+            const cooldownMs = 60 * 60 * 1000;
+            const elapsed = now - lastSpinTime;
+            return Math.max(cooldownMs - elapsed, 0);
+        }
+
+        function updateSpinCooldownUI() {
+            const btn = document.getElementById('spinBtn');
+            const cooldownDiv = document.getElementById('spinCooldown');
+            if (isSpinCooldownActive()) {
+                btn.disabled = true;
+                const remaining = getSpinCooldownRemainingMs();
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                cooldownDiv.textContent = `⏳ Next spin available in: ${hours}h ${minutes}m ${seconds}s`;
+                if (!spinCooldownInterval) {
+                    spinCooldownInterval = setInterval(() => {
+                        const rem = getSpinCooldownRemainingMs();
+                        if (rem <= 0) {
+                            clearInterval(spinCooldownInterval);
+                            spinCooldownInterval = null;
+                            btn.disabled = false;
+                            cooldownDiv.textContent = '';
+                            updateUI(); // refresh
+                        } else {
+                            const h = Math.floor(rem / 3600000);
+                            const m = Math.floor((rem % 3600000) / 60000);
+                            const s = Math.floor((rem % 60000) / 1000);
+                            cooldownDiv.textContent = `⏳ Next spin available in: ${h}h ${m}m ${s}s`;
+                        }
+                    }, 1000);
+                }
+            } else {
+                btn.disabled = false;
+                cooldownDiv.textContent = '';
+                if (spinCooldownInterval) {
+                    clearInterval(spinCooldownInterval);
+                    spinCooldownInterval = null;
+                }
+            }
+        }
+
+        function startSpinCooldown() {
+            updateSpinCooldownUI();
         }
 
         // MINING
@@ -1232,7 +1317,8 @@
                 totalReferrals: totalReferrals,
                 rewardEarned: rewardEarned,
                 adWatchCounts: adWatchCounts,
-                adWatchDate: todayDate
+                adWatchDate: todayDate,
+                lastSpinTime: lastSpinTime
             });
         }
 
