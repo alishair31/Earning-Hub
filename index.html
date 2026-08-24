@@ -556,6 +556,9 @@
                     <div class="label">Total Balance</div>
                     <div class="amount">$<span id="totalBalance">0.00</span></div>
                     <div class="points-display">🪙 Points: <span id="totalPoints">0</span></div>
+                    <button class="btn-primary" style="margin-top:10px; background:linear-gradient(135deg,#a855f7,#7c3aed);" onclick="convertPoints()">
+                        💱 Convert Points to Balance (100,000 pts = $10)
+                    </button>
                 </div>
 
                 <div class="two-box-row">
@@ -567,7 +570,7 @@
                     <div class="card spin-win" onclick="switchSection('spin-win-section')">
                         <div class="icon">🎡</div>
                         <div class="box-title">Spin and Win</div>
-                        <div class="box-sub">Spin and win rewards</div>
+                        <div class="box-sub">Spin and win points</div>
                     </div>
                 </div>
 
@@ -657,7 +660,7 @@
             <div class="section" id="spin-win-section">
                 <div class="card card-highlight">
                     <h2 class="card-title" style="text-align:center;">🎡 Spin and Win</h2>
-                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Spin the wheel to win points. $25 and $50 are display only.</p>
+                    <p style="text-align:center; color:var(--text-muted); margin-top:6px;">Spin the wheel to win points!</p>
                 </div>
                 <div class="wheel-container">
                     <div class="wheel-pointer"></div>
@@ -979,14 +982,16 @@
             });
         }
 
-        // SPIN WHEEL
+        // SPIN WHEEL (updated segments - only points)
         const wheelSegments = [
-            { label: '$25', color: '#f59e0b', type: 'display', value: 0, weight: 1 },
-            { label: '1000 pts', color: '#a855f7', type: 'points', value: 1000, weight: 1 },
-            { label: '$50', color: '#60a5fa', type: 'display', value: 0, weight: 1 },
-            { label: '1 pt', color: '#22c55e', type: 'points', value: 1, weight: 157 },
-            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 30 },
-            { label: '100 pts', color: '#34d399', type: 'points', value: 100, weight: 10 }
+            { label: '5 pts', color: '#22c55e', type: 'points', value: 5, weight: 50 },
+            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 35 },
+            { label: '50 pts', color: '#34d399', type: 'points', value: 50, weight: 25 },
+            { label: '100 pts', color: '#60a5fa', type: 'points', value: 100, weight: 15 },
+            { label: '250 pts', color: '#a855f7', type: 'points', value: 250, weight: 5 },
+            { label: '500 pts', color: '#f59e0b', type: 'points', value: 500, weight: 3 },
+            { label: '750 pts', color: '#f97316', type: 'points', value: 750, weight: 2 },
+            { label: '1000 pts', color: '#ef4444', type: 'points', value: 1000, weight: 1 }
         ];
 
         let wheelAngle = 0;
@@ -1021,13 +1026,13 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                if (sliceAngle > 0.15) {
+                if (sliceAngle > 0.12) {
                     ctx.save();
                     ctx.translate(centerX, centerY);
                     ctx.rotate(startAngle + sliceAngle / 2);
                     ctx.textAlign = 'right';
                     ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 16px "Segoe UI", sans-serif';
+                    ctx.font = 'bold 14px "Segoe UI", sans-serif';
                     ctx.fillText(seg.label, radius - 15, 6);
                     ctx.restore();
                 }
@@ -1086,15 +1091,12 @@
                     
                     const result = wheelSegments[segIndex];
                     
-                    if (result.type === 'points') {
-                        totalPoints += result.value;
-                        updateUserData().then(() => {
-                            updateUI();
-                            document.getElementById('spinResult').textContent = `🎉 You won ${result.value} points!`;
-                        });
-                    } else {
-                        document.getElementById('spinResult').textContent = `😅 ${result.label} is display only, try again!`;
-                    }
+                    // Since all segments are points now
+                    totalPoints += result.value;
+                    updateUserData().then(() => {
+                        updateUI();
+                        document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
+                    });
                     
                     spinning = false;
                     document.getElementById('spinBtn').disabled = false;
@@ -1198,6 +1200,25 @@
             });
             document.getElementById('usdtAddress').value = '';
             alert('✅ Withdrawal request submitted!');
+        }
+
+        async function convertPoints() {
+            if (totalPoints < 100000) {
+                alert('You need at least 100,000 points to convert. Current points: ' + totalPoints);
+                return;
+            }
+            
+            // 100,000 points = $10, so 1 point = $0.0001
+            const pointsToConvert = totalPoints;
+            const dollarsToAdd = pointsToConvert * 0.0001;
+            
+            if (confirm(`Convert ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}?`)) {
+                totalPoints = 0;
+                totalBalance += dollarsToAdd;
+                await updateUserData();
+                updateUI();
+                alert(`✅ Converted ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}!`);
+            }
         }
 
         async function updateUserData() {
