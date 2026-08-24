@@ -99,21 +99,11 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
         }
-        .page-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        .page-container::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
+        .page-container::-webkit-scrollbar { width: 4px; }
+        .page-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        .section {
-            display: none;
-            animation: fadeUp 0.35s ease;
-        }
-        .section.active {
-            display: block;
-        }
+        .section { display: none; animation: fadeUp 0.35s ease; }
+        .section.active { display: block; }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(18px); }
@@ -134,17 +124,8 @@
             box-shadow: 0 0 30px #3b82f644, 0 4px 20px #00000030;
         }
 
-        .card-title {
-            font-size: 17px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-            margin-bottom: 4px;
-        }
-        .card-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+        .card-title { font-size: 17px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 4px; }
+        .card-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
         .balance-display {
             text-align: center;
@@ -492,7 +473,7 @@
         .btn-secondary:active { transform: scale(0.95); }
         .ad-timer { font-size: 40px; font-weight: 900; color: #fbbf24; margin: 10px 0; }
 
-        /* Watch & Earn section */
+        /* Watch & Earn */
         .watch-box {
             display: flex;
             justify-content: space-between;
@@ -503,11 +484,7 @@
             transition: all 0.25s;
         }
         .watch-box:active { transform: scale(0.97); }
-        .watch-box .watch-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .watch-box .watch-info { display: flex; align-items: center; gap: 12px; }
         .watch-box .watch-icon {
             width: 48px;
             height: 48px;
@@ -517,21 +494,9 @@
             justify-content: center;
             font-size: 24px;
         }
-        .watch-box .watch-name {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-        }
-        .watch-box .watch-limit {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-        .watch-box .watch-count {
-            font-size: 18px;
-            font-weight: 900;
-            color: #a78bfa;
-        }
+        .watch-box .watch-name { font-size: 16px; font-weight: 800; letter-spacing: 0.3px; }
+        .watch-box .watch-limit { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .watch-box .watch-count { font-size: 18px; font-weight: 900; color: #a78bfa; }
         .simple-ad .watch-icon { background: #1e293b; color: #60a5fa; }
         .pro-ad .watch-icon { background: #1f1a0e; color: #f59e0b; }
         .sponsor-ad .watch-icon { background: #1a0f2e; color: #a855f7; }
@@ -823,7 +788,7 @@
         </div>
     </div>
 
-    <!-- AD MODAL (for mining & watch ads) -->
+    <!-- AD MODAL -->
     <div class="modal-overlay" id="adModal">
         <div class="modal-box">
             <h3>📺 Watch Ad</h3>
@@ -861,7 +826,7 @@
         let totalReferrals = 0;
         let rewardEarned = 0;
         let adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
-        let todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        let todayDate = new Date().toISOString().split('T')[0];
 
         // Telegram init
         function initTelegramUser() {
@@ -970,7 +935,7 @@
             document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
         }
 
-        // General ad modal functions (used for mining and watch ads)
+        // Ad modal with callback
         function showAdModal(callback) {
             const modal = document.getElementById('adModal');
             modal.classList.add('active');
@@ -996,7 +961,7 @@
         }
 
         function skipAd() {
-            // This is a fallback, actual handling in showAdModal's onclick
+            // fallback, actual handling in showAdModal's onclick
         }
 
         // WATCH ADS
@@ -1016,12 +981,12 @@
 
         // SPIN WHEEL
         const wheelSegments = [
-            { label: '$25', color: '#f59e0b', type: 'display', value: 0 },
-            { label: '1000 pts', color: '#a855f7', type: 'points', value: 1000, weight: 5 },
-            { label: '$50', color: '#60a5fa', type: 'display', value: 0 },
-            { label: '1 pt', color: '#22c55e', type: 'points', value: 1, weight: 30 },
-            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 25 },
-            { label: '100 pts', color: '#34d399', type: 'points', value: 100, weight: 15 }
+            { label: '$25', color: '#f59e0b', type: 'display', value: 0, weight: 1 },
+            { label: '1000 pts', color: '#a855f7', type: 'points', value: 1000, weight: 1 },
+            { label: '$50', color: '#60a5fa', type: 'display', value: 0, weight: 1 },
+            { label: '1 pt', color: '#22c55e', type: 'points', value: 1, weight: 157 },
+            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 30 },
+            { label: '100 pts', color: '#34d399', type: 'points', value: 100, weight: 10 }
         ];
 
         let wheelAngle = 0;
@@ -1035,36 +1000,41 @@
             const centerX = width / 2;
             const centerY = height / 2;
             const radius = Math.min(width, height) / 2 - 10;
-            const segmentAngle = (2 * Math.PI) / wheelSegments.length;
-            
+            const totalWeight = wheelSegments.reduce((sum, seg) => sum + seg.weight, 0);
+            let cumulativeAngle = 0;
+
             ctx.clearRect(0, 0, width, height);
-            
+
             for (let i = 0; i < wheelSegments.length; i++) {
-                const startAngle = i * segmentAngle + wheelAngle;
-                const endAngle = startAngle + segmentAngle;
-                
+                const seg = wheelSegments[i];
+                const startAngle = cumulativeAngle + wheelAngle;
+                const sliceAngle = (seg.weight / totalWeight) * 2 * Math.PI;
+                const endAngle = startAngle + sliceAngle;
+
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
-                ctx.fillStyle = wheelSegments[i].color;
+                ctx.fillStyle = seg.color;
                 ctx.fill();
                 ctx.strokeStyle = '#0f172a';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-                
-                // Label
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(startAngle + segmentAngle / 2);
-                ctx.textAlign = 'right';
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 16px "Segoe UI", sans-serif';
-                ctx.fillText(wheelSegments[i].label, radius - 15, 6);
-                ctx.restore();
+
+                if (sliceAngle > 0.15) {
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(startAngle + sliceAngle / 2);
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 16px "Segoe UI", sans-serif';
+                    ctx.fillText(seg.label, radius - 15, 6);
+                    ctx.restore();
+                }
+
+                cumulativeAngle += sliceAngle;
             }
-            
-            // Center circle
+
             ctx.beginPath();
             ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
             ctx.fillStyle = '#0f172a';
@@ -1080,7 +1050,6 @@
             document.getElementById('spinBtn').disabled = true;
             document.getElementById('spinResult').textContent = 'Spinning...';
             
-            // Random spin: at least 5 full rotations, plus random angle
             const fullRotations = 5 + Math.floor(Math.random() * 3);
             const targetAngle = wheelAngle + fullRotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
             const duration = 3000;
@@ -1091,7 +1060,6 @@
             function animateSpin(now) {
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                // Ease out cubic
                 const eased = 1 - Math.pow(1 - progress, 3);
                 wheelAngle = startAngle + deltaAngle * eased;
                 drawWheel();
@@ -1099,16 +1067,23 @@
                 if (progress < 1) {
                     requestAnimationFrame(animateSpin);
                 } else {
-                    // Determine result
-                    const normalizedAngle = ((wheelAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-                    const segmentAngle = (2 * Math.PI) / wheelSegments.length;
-                    // Pointer at top is -90° (or 270°). We need to find which segment is under pointer.
-                    // The wheel is drawn with segment i from startAngle = i*segmentAngle + wheelAngle.
-                    // Pointer is at top (angle = -PI/2). So we compute pointer angle relative to wheel: pointerAngle = -PI/2.
-                    // Find segment index where pointerAngle lies between startAngle and startAngle+segmentAngle (mod 2PI).
+                    // Determine result based on weighted segments
+                    const totalWeight = wheelSegments.reduce((sum, seg) => sum + seg.weight, 0);
                     const pointerAngle = -Math.PI / 2;
                     const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-                    const segIndex = Math.floor(relativeAngle / segmentAngle);
+                    let cumulativeWeight = 0;
+                    let segIndex = wheelSegments.length - 1;
+                    
+                    for (let i = 0; i < wheelSegments.length; i++) {
+                        const segWeight = wheelSegments[i].weight;
+                        const segAngle = (segWeight / totalWeight) * 2 * Math.PI;
+                        if (relativeAngle >= cumulativeWeight && relativeAngle < cumulativeWeight + segAngle) {
+                            segIndex = i;
+                            break;
+                        }
+                        cumulativeWeight += segAngle;
+                    }
+                    
                     const result = wheelSegments[segIndex];
                     
                     if (result.type === 'points') {
