@@ -1013,21 +1013,32 @@
             }
             
             if (type === 'simple' || type === 'pro') {
-                showMonetagAd(type, async () => {
+                // Pehle local count/points update karo
+                const callback = async () => {
                     adWatchCounts[type]++;
                     totalPoints += 25;
-                    await updateUserData();
-                    updateUI();
+                    updateUI(); // turant UI update
+                    try {
+                        await updateUserData();
+                    } catch (err) {
+                        console.error('Update failed:', err);
+                    }
                     alert('✅ You earned 25 points!');
-                });
+                };
+                showMonetagAd(type, callback);
             } else if (type === 'sponsor') {
-                showSponsoredAd(type, async () => {
+                const callback = async () => {
                     adWatchCounts[type]++;
                     totalPoints += 25;
-                    await updateUserData();
                     updateUI();
+                    try {
+                        await updateUserData();
+                    } catch (err) {
+                        console.error('Update failed:', err);
+                    }
                     alert('✅ You earned 25 points!');
-                });
+                };
+                showSponsoredAd(type, callback);
             }
         }
 
@@ -1178,6 +1189,11 @@
                         updateUI();
                         document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
                         startSpinCooldown();
+                    }).catch(err => {
+                        console.error('Spin update failed:', err);
+                        updateUI();
+                        document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
+                        startSpinCooldown();
                     });
                     
                     spinning = false;
@@ -1274,22 +1290,26 @@
             
             const userId = telegramUser.id.toString();
             const sessionRef = db.collection('mining_sessions').doc(userId);
-            await sessionRef.set({
-                startTime: firebase.firestore.FieldValue.serverTimestamp(),
-                plan: selectedPlan,
-                speed: planSpeed,
-                reward: 0.05,
-                status: 'active',
-                userId: userId
-            });
+            try {
+                await sessionRef.set({
+                    startTime: firebase.firestore.FieldValue.serverTimestamp(),
+                    plan: selectedPlan,
+                    speed: planSpeed,
+                    reward: 0.05,
+                    status: 'active',
+                    userId: userId
+                });
+            } catch (err) {
+                console.error('Mining session save failed:', err);
+            }
             
             miningTimerInterval = setInterval(() => {
                 if (miningRemaining <= 0) {
                     clearInterval(miningTimerInterval);
                     miningActive = false;
                     totalBalance += 0.05;
-                    updateUserData();
-                    sessionRef.update({ status: 'completed', endTime: firebase.firestore.FieldValue.serverTimestamp() });
+                    updateUserData().catch(err => console.error('Update failed:', err));
+                    sessionRef.update({ status: 'completed', endTime: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.error('Session update failed:', err));
                     document.getElementById('startMiningBtn').textContent = 'Start Mining';
                     document.getElementById('startMiningBtn').disabled = false;
                     document.getElementById('miningTimer').textContent = '03:00:00';
@@ -1310,7 +1330,11 @@
             selectedPlan = planName;
             planSpeed = speedMultiplier;
             document.getElementById('currentPlan').textContent = planName;
-            await updateUserData();
+            try {
+                await updateUserData();
+            } catch (err) {
+                console.error('Plan update failed:', err);
+            }
             alert(`${planName} plan activated - Speed ${speedMultiplier}x`);
             if (!miningActive) {
                 miningRemaining = Math.floor(3 * 3600 / planSpeed);
@@ -1334,16 +1358,24 @@
                 return;
             }
             totalBalance -= 25;
-            await updateUserData();
+            try {
+                await updateUserData();
+            } catch (err) {
+                console.error('Withdrawal update failed:', err);
+            }
             
             const userId = telegramUser.id.toString();
-            await db.collection('withdrawals').add({
-                userId: userId,
-                address: address,
-                amount: 25,
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            try {
+                await db.collection('withdrawals').add({
+                    userId: userId,
+                    address: address,
+                    amount: 25,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (err) {
+                console.error('Withdrawal request save failed:', err);
+            }
             document.getElementById('usdtAddress').value = '';
             alert('✅ Withdrawal request submitted!');
         }
@@ -1360,8 +1392,12 @@
             if (confirm(`Convert ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}?`)) {
                 totalPoints = 0;
                 totalBalance += dollarsToAdd;
-                await updateUserData();
                 updateUI();
+                try {
+                    await updateUserData();
+                } catch (err) {
+                    console.error('Convert update failed:', err);
+                }
                 alert(`✅ Converted ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}!`);
             }
         }
@@ -1369,17 +1405,23 @@
         async function updateUserData() {
             if (!telegramUser) return;
             const userId = telegramUser.id.toString();
-            await db.collection('users').doc(userId).update({
-                balance: totalBalance,
-                points: totalPoints,
-                plan: selectedPlan,
-                planSpeed: planSpeed,
-                totalReferrals: totalReferrals,
-                rewardEarned: rewardEarned,
-                adWatchCounts: adWatchCounts,
-                adWatchDate: todayDate,
-                lastSpinTime: lastSpinTime
-            });
+            const userRef = db.collection('users').doc(userId);
+            try {
+                await userRef.set({
+                    balance: totalBalance,
+                    points: totalPoints,
+                    plan: selectedPlan,
+                    planSpeed: planSpeed,
+                    totalReferrals: totalReferrals,
+                    rewardEarned: rewardEarned,
+                    adWatchCounts: adWatchCounts,
+                    adWatchDate: todayDate,
+                    lastSpinTime: lastSpinTime
+                }, { merge: true });
+            } catch (error) {
+                console.error('Firestore update failed:', error);
+                throw error;
+            }
         }
 
         function logout() {
