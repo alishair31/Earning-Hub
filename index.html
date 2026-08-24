@@ -552,9 +552,6 @@
     </style>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="phone-frame">
@@ -819,19 +816,6 @@
     </div>
 
     <script>
-        // Firebase configuration (apni values paste karo)
-        const firebaseConfig = {
-            apiKey: "AIzaSyB26W-lTdcCFuEjBiJCBVLoNW14Pkw7ep8",
-            authDomain: "earning-hub-4b88a.firebaseapp.com",
-            projectId: "earning-hub-4b88a",
-            storageBucket: "earning-hub-4b88a.firebasestorage.app",
-            messagingSenderId: "381752598017",
-            appId: "1:381752598017:web:0fe2db8c9c2f59f279ea00"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         // Global variables
         let telegramUser = null;
         let totalBalance = 0;
@@ -852,6 +836,7 @@
         let adCallback = null;
         let monetagSmartLink = 'https://omg10.com/4/11642743'; // Monetag SmartLink
         let adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL'; // Adsterra SmartLink (baad mein)
+        let storageKey = 'earningHubData';
 
         // Telegram init
         function initTelegramUser() {
@@ -868,13 +853,12 @@
             loadUserData();
         }
 
-        async function loadUserData() {
+        function loadUserData() {
             const userId = telegramUser.id.toString();
-            const userRef = db.collection('users').doc(userId);
-            try {
-                const doc = await userRef.get();
-                if (doc.exists) {
-                    const data = doc.data();
+            const saved = localStorage.getItem(storageKey + '_' + userId);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
                     totalBalance = data.balance || 0;
                     totalPoints = data.points || 0;
                     selectedPlan = data.plan || 'Free';
@@ -887,27 +871,32 @@
                     } else {
                         adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
                     }
-                } else {
-                    await userRef.set({
-                        name: telegramUser.first_name + ' ' + (telegramUser.last_name || ''),
-                        username: telegramUser.username || '',
-                        balance: 0,
-                        points: 0,
-                        plan: 'Free',
-                        planSpeed: 1,
-                        totalReferrals: 0,
-                        rewardEarned: 0,
-                        adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
-                        adWatchDate: todayDate,
-                        lastSpinTime: null,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    lastSpinTime = null;
+                } catch (e) {
+                    console.error('Error parsing saved data:', e);
                 }
-            } catch (error) {
-                console.error('Error loading user:', error);
+            } else {
+                // first time
+                adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
+                lastSpinTime = null;
             }
             updateUI();
+        }
+
+        function saveUserData() {
+            if (!telegramUser) return;
+            const userId = telegramUser.id.toString();
+            const data = {
+                balance: totalBalance,
+                points: totalPoints,
+                plan: selectedPlan,
+                planSpeed: planSpeed,
+                totalReferrals: totalReferrals,
+                rewardEarned: rewardEarned,
+                adWatchCounts: adWatchCounts,
+                adWatchDate: todayDate,
+                lastSpinTime: lastSpinTime
+            };
+            localStorage.setItem(storageKey + '_' + userId, JSON.stringify(data));
         }
 
         function updateUI() {
@@ -923,6 +912,7 @@
             document.getElementById('sponsor-count').textContent = adWatchCounts.sponsor + '/25';
             drawWheel();
             updateSpinCooldownUI();
+            saveUserData();
         }
 
         // Navigation
@@ -1013,32 +1003,19 @@
             }
             
             if (type === 'simple' || type === 'pro') {
-                // Pehle local count/points update karo
-                const callback = async () => {
-                    adWatchCounts[type]++;
-                    totalPoints += 25;
-                    updateUI(); // turant UI update
-                    try {
-                        await updateUserData();
-                    } catch (err) {
-                        console.error('Update failed:', err);
-                    }
-                    alert('✅ You earned 25 points!');
-                };
-                showMonetagAd(type, callback);
-            } else if (type === 'sponsor') {
-                const callback = async () => {
+                showMonetagAd(type, () => {
                     adWatchCounts[type]++;
                     totalPoints += 25;
                     updateUI();
-                    try {
-                        await updateUserData();
-                    } catch (err) {
-                        console.error('Update failed:', err);
-                    }
                     alert('✅ You earned 25 points!');
-                };
-                showSponsoredAd(type, callback);
+                });
+            } else if (type === 'sponsor') {
+                showSponsoredAd(type, () => {
+                    adWatchCounts[type]++;
+                    totalPoints += 25;
+                    updateUI();
+                    alert('✅ You earned 25 points!');
+                });
             }
         }
 
@@ -1146,7 +1123,8 @@
             }
             spinning = true;
             document.getElementById('spinBtn').disabled = true;
-            document.getElementById('spinResult').textContent = 'Spinning...';
+            document.getElementById('spinResult').textContent = ''; // clear previous result
+            document.getElementById('spinCooldown').textContent = ''; // clear cooldown text during spin
             
             const fullRotations = 5 + Math.floor(Math.random() * 3);
             const targetAngle = wheelAngle + fullRotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
@@ -1185,16 +1163,9 @@
                     
                     totalPoints += result.value;
                     lastSpinTime = Date.now();
-                    updateUserData().then(() => {
-                        updateUI();
-                        document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
-                        startSpinCooldown();
-                    }).catch(err => {
-                        console.error('Spin update failed:', err);
-                        updateUI();
-                        document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
-                        startSpinCooldown();
-                    });
+                    updateUI(); // this will save and update cooldown display
+                    document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
+                    startSpinCooldown();
                     
                     spinning = false;
                     document.getElementById('spinBtn').disabled = false;
@@ -1269,7 +1240,7 @@
         }
 
         // MINING
-        async function startMining() {
+        function startMining() {
             if (miningActive) {
                 alert('Mining is already running!');
                 return;
@@ -1288,28 +1259,12 @@
             document.getElementById('startMiningBtn').disabled = true;
             updateMiningTimerDisplay();
             
-            const userId = telegramUser.id.toString();
-            const sessionRef = db.collection('mining_sessions').doc(userId);
-            try {
-                await sessionRef.set({
-                    startTime: firebase.firestore.FieldValue.serverTimestamp(),
-                    plan: selectedPlan,
-                    speed: planSpeed,
-                    reward: 0.05,
-                    status: 'active',
-                    userId: userId
-                });
-            } catch (err) {
-                console.error('Mining session save failed:', err);
-            }
-            
             miningTimerInterval = setInterval(() => {
                 if (miningRemaining <= 0) {
                     clearInterval(miningTimerInterval);
                     miningActive = false;
                     totalBalance += 0.05;
-                    updateUserData().catch(err => console.error('Update failed:', err));
-                    sessionRef.update({ status: 'completed', endTime: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.error('Session update failed:', err));
+                    updateUI();
                     document.getElementById('startMiningBtn').textContent = 'Start Mining';
                     document.getElementById('startMiningBtn').disabled = false;
                     document.getElementById('miningTimer').textContent = '03:00:00';
@@ -1322,7 +1277,7 @@
             }, 1000);
         }
 
-        async function selectPlan(planName, price, speedMultiplier) {
+        function selectPlan(planName, price, speedMultiplier) {
             if (planName === selectedPlan) {
                 alert('This plan is already selected');
                 return;
@@ -1330,11 +1285,7 @@
             selectedPlan = planName;
             planSpeed = speedMultiplier;
             document.getElementById('currentPlan').textContent = planName;
-            try {
-                await updateUserData();
-            } catch (err) {
-                console.error('Plan update failed:', err);
-            }
+            updateUI();
             alert(`${planName} plan activated - Speed ${speedMultiplier}x`);
             if (!miningActive) {
                 miningRemaining = Math.floor(3 * 3600 / planSpeed);
@@ -1342,7 +1293,7 @@
             }
         }
 
-        async function withdraw() {
+        function withdraw() {
             const address = document.getElementById('usdtAddress').value.trim();
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             if (!address) {
@@ -1358,29 +1309,12 @@
                 return;
             }
             totalBalance -= 25;
-            try {
-                await updateUserData();
-            } catch (err) {
-                console.error('Withdrawal update failed:', err);
-            }
-            
-            const userId = telegramUser.id.toString();
-            try {
-                await db.collection('withdrawals').add({
-                    userId: userId,
-                    address: address,
-                    amount: 25,
-                    status: 'pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (err) {
-                console.error('Withdrawal request save failed:', err);
-            }
+            updateUI();
             document.getElementById('usdtAddress').value = '';
             alert('✅ Withdrawal request submitted!');
         }
 
-        async function convertPoints() {
+        function convertPoints() {
             if (totalPoints < 100000) {
                 alert('You need at least 100,000 points to convert. Current points: ' + totalPoints);
                 return;
@@ -1393,34 +1327,7 @@
                 totalPoints = 0;
                 totalBalance += dollarsToAdd;
                 updateUI();
-                try {
-                    await updateUserData();
-                } catch (err) {
-                    console.error('Convert update failed:', err);
-                }
                 alert(`✅ Converted ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}!`);
-            }
-        }
-
-        async function updateUserData() {
-            if (!telegramUser) return;
-            const userId = telegramUser.id.toString();
-            const userRef = db.collection('users').doc(userId);
-            try {
-                await userRef.set({
-                    balance: totalBalance,
-                    points: totalPoints,
-                    plan: selectedPlan,
-                    planSpeed: planSpeed,
-                    totalReferrals: totalReferrals,
-                    rewardEarned: rewardEarned,
-                    adWatchCounts: adWatchCounts,
-                    adWatchDate: todayDate,
-                    lastSpinTime: lastSpinTime
-                }, { merge: true });
-            } catch (error) {
-                console.error('Firestore update failed:', error);
-                throw error;
             }
         }
 
