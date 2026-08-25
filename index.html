@@ -550,8 +550,14 @@
             min-height: 20px;
         }
     </style>
+    <!-- Firebase SDKs (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Monetag SDK (only for sponsored ads) -->
+    <script src='//libtl.com/sdk.js' data-zone='11647720' data-sdk='show_11647720'></script>
 </head>
 <body>
     <div class="phone-frame">
@@ -778,8 +784,8 @@
             <div class="section" id="profile-section">
                 <div class="profile-header">
                     <div class="avatar">👤</div>
-                    <div class="profile-name">Rahul Sharma</div>
-                    <div class="profile-id">Telegram ID: @rahul_12345</div>
+                    <div class="profile-name" id="profileName">User</div>
+                    <div class="profile-id" id="profileEmail">Email: -</div>
                 </div>
                 <div class="profile-menu">
                     <div class="card" onclick="alert('Account Details')"><span>📋 Account Details</span><span class="arrow">›</span></div>
@@ -787,7 +793,7 @@
                     <div class="card" onclick="alert('Terms & Conditions')"><span>📄 Terms & Conditions</span><span class="arrow">›</span></div>
                     <div class="card" onclick="alert('Privacy & Policy')"><span>🛡️ Privacy & Policy</span><span class="arrow">›</span></div>
                     <div class="card" onclick="alert('Help & Support')"><span>🆘 Help & Support</span><span class="arrow">›</span></div>
-                    <div class="card" onclick="logout()"><span>🚪 Logout</span><span class="arrow">›</span></div>
+                    <div class="card" onclick="logoutUser()"><span>🚪 Logout</span><span class="arrow">›</span></div>
                 </div>
                 <div class="profile-footer">Support Team</div>
             </div>
@@ -803,6 +809,20 @@
         </div>
     </div>
 
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box">
+            <h3 id="authTitle">Login / Sign Up</h3>
+            <div id="authForm">
+                <input type="email" id="authEmail" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:12px; border:1.5px solid #2a3a5c; background:#0f172a; color:white;">
+                <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:12px; border:1.5px solid #2a3a5c; background:#0f172a; color:white;">
+                <button class="btn-primary" onclick="loginUser()">Login</button>
+                <button class="btn-secondary" onclick="signupUser()" style="margin-top:8px;">Sign Up</button>
+                <p style="margin-top:8px; font-size:12px; color:var(--text-muted);">By continuing, you agree to our Terms</p>
+            </div>
+        </div>
+    </div>
+
     <!-- AD MODAL (Monetag SmartLink) -->
     <div class="modal-overlay" id="adModal">
         <div class="modal-box">
@@ -815,107 +835,214 @@
         </div>
     </div>
 
+    <!-- SDK AD MODAL (for sponsored ads) -->
+    <div class="modal-overlay" id="sdkAdModal">
+        <div class="modal-box">
+            <h3>🤝 Sponsored Ad</h3>
+            <p>Please view the sponsored ad to earn 25 points.</p>
+            <div id="sdkAdContainer">
+                <!-- Monetag SDK ad will be injected here dynamically -->
+            </div>
+            <button class="btn-primary" id="sdkClaimBtn" disabled style="margin-top:8px;" onclick="closeSdkAdModal()">Claim Reward</button>
+            <button class="btn-secondary" onclick="closeSdkAdModal()" style="margin-top:8px;">Close</button>
+        </div>
+    </div>
+
     <script>
-        // Global variables
+        // ================= FIREBASE INIT =================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB26W-lTdcCFuEjBiJCBVLoNW14Pkw7ep8",
+            authDomain: "earning-hub-4b88a.firebaseapp.com",
+            projectId: "earning-hub-4b88a",
+            storageBucket: "earning-hub-4b88a.firebasestorage.app",
+            messagingSenderId: "381752598017",
+            appId: "1:381752598017:web:0fe2db8c9c2f59f279ea00"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ================= GLOBAL STATE =================
+        let currentUser = null; // Firebase user
+        let userData = {
+            balance: 0,
+            points: 0,
+            plan: 'Free',
+            planSpeed: 1,
+            totalReferrals: 0,
+            rewardEarned: 0,
+            adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
+            adWatchDate: new Date().toISOString().split('T')[0],
+            lastSpinTime: null
+        };
         let telegramUser = null;
-        let totalBalance = 0;
-        let totalPoints = 0;
-        let selectedPlan = 'Free';
-        let planSpeed = 1;
         let miningActive = false;
         let miningTimerInterval = null;
         let miningRemaining = 3 * 3600;
         let adWatched = false;
-        let adTimerInterval = null;
-        let totalReferrals = 0;
-        let rewardEarned = 0;
-        let adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
-        let todayDate = new Date().toISOString().split('T')[0];
-        let lastSpinTime = null;
-        let spinCooldownInterval = null;
         let adCallback = null;
-        let monetagSmartLink = 'https://omg10.com/4/11642743'; // Monetag SmartLink
-        let adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL'; // Adsterra SmartLink (baad mein)
-        let storageKey = 'earningHubData';
+        let spinCooldownInterval = null;
+        let spinning = false;
+        let wheelAngle = 0;
+        let sdkAdTimer = null;
 
-        // Telegram init
-        function initTelegramUser() {
-            const tg = window.Telegram.WebApp;
-            const user = tg.initDataUnsafe?.user;
-            telegramUser = user || { id: 'demo_user', first_name: 'Demo', last_name: 'User', username: 'demo' };
-            
-            document.querySelector('.profile-name').textContent = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
-            document.querySelector('.profile-id').textContent = 'Telegram ID: @' + (telegramUser.username || telegramUser.id);
-            document.querySelector('.avatar').textContent = telegramUser.first_name.charAt(0).toUpperCase();
-            
-            tg.ready();
-            tg.expand();
-            loadUserData();
+        const monetagSmartLink = 'https://omg10.com/4/11642743'; // Monetag SmartLink
+        const adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL'; // Adsterra SmartLink (baad mein)
+
+        // Wheel segments
+        const wheelSegments = [
+            { label: '5 pts', color: '#22c55e', value: 5, weight: 1 },
+            { label: '10 pts', color: '#f472b6', value: 10, weight: 1 },
+            { label: '50 pts', color: '#34d399', value: 50, weight: 1 },
+            { label: '100 pts', color: '#60a5fa', value: 100, weight: 1 },
+            { label: '250 pts', color: '#a855f7', value: 250, weight: 1 },
+            { label: '500 pts', color: '#f59e0b', value: 500, weight: 1 },
+            { label: '750 pts', color: '#f97316', value: 750, weight: 1 },
+            { label: '1000 pts', color: '#ef4444', value: 1000, weight: 1 }
+        ];
+
+        // ================= AUTH HANDLING =================
+        function showAuthModal() {
+            document.getElementById('authModal').classList.add('active');
         }
 
-        function loadUserData() {
-            const userId = telegramUser.id.toString();
-            const saved = localStorage.getItem(storageKey + '_' + userId);
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    totalBalance = data.balance || 0;
-                    totalPoints = data.points || 0;
-                    selectedPlan = data.plan || 'Free';
-                    planSpeed = data.planSpeed || 1;
-                    totalReferrals = data.totalReferrals || 0;
-                    rewardEarned = data.rewardEarned || 0;
-                    lastSpinTime = data.lastSpinTime || null;
-                    if (data.adWatchCounts && data.adWatchDate === todayDate) {
-                        adWatchCounts = data.adWatchCounts;
-                    } else {
-                        adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
-                    }
-                } catch (e) {
-                    console.error('Error parsing saved data:', e);
-                }
-            } else {
-                // first time
-                adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
-                lastSpinTime = null;
+        function hideAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        async function loginUser() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
             }
-            updateUI();
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                // Auth state listener will handle the rest
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
         }
 
-        function saveUserData() {
-            if (!telegramUser) return;
-            const userId = telegramUser.id.toString();
-            const data = {
-                balance: totalBalance,
-                points: totalPoints,
-                plan: selectedPlan,
-                planSpeed: planSpeed,
-                totalReferrals: totalReferrals,
-                rewardEarned: rewardEarned,
-                adWatchCounts: adWatchCounts,
-                adWatchDate: todayDate,
-                lastSpinTime: lastSpinTime
-            };
-            localStorage.setItem(storageKey + '_' + userId, JSON.stringify(data));
+        async function signupUser() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                // Auth state listener will handle the rest
+            } catch (error) {
+                alert('Signup failed: ' + error.message);
+            }
         }
 
+        async function logoutUser() {
+            try {
+                await auth.signOut();
+                // Auth state listener will handle the rest
+            } catch (error) {
+                alert('Logout failed: ' + error.message);
+            }
+        }
+
+        // Auth state observer
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                hideAuthModal();
+                // Update profile display
+                document.getElementById('profileName').textContent = user.email.split('@')[0];
+                document.getElementById('profileEmail').textContent = 'Email: ' + user.email;
+                // Load user data from Firestore
+                await loadUserDataFromFirestore(user.uid);
+                updateUI();
+            } else {
+                currentUser = null;
+                // Reset to default
+                userData = {
+                    balance: 0,
+                    points: 0,
+                    plan: 'Free',
+                    planSpeed: 1,
+                    totalReferrals: 0,
+                    rewardEarned: 0,
+                    adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
+                    adWatchDate: new Date().toISOString().split('T')[0],
+                    lastSpinTime: null
+                };
+                showAuthModal();
+            }
+        });
+
+        // Load user data from Firestore
+        async function loadUserDataFromFirestore(uid) {
+            try {
+                const docRef = db.collection('users').doc(uid);
+                const doc = await docRef.get();
+                if (doc.exists) {
+                    userData = doc.data();
+                    // Ensure nested objects exist
+                    if (!userData.adWatchCounts) userData.adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
+                    // Check if ad watch date is today, else reset counts
+                    const today = new Date().toISOString().split('T')[0];
+                    if (userData.adWatchDate !== today) {
+                        userData.adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
+                        userData.adWatchDate = today;
+                    }
+                } else {
+                    // First time: create document
+                    userData = {
+                        balance: 0,
+                        points: 0,
+                        plan: 'Free',
+                        planSpeed: 1,
+                        totalReferrals: 0,
+                        rewardEarned: 0,
+                        adWatchCounts: { simple: 0, pro: 0, sponsor: 0 },
+                        adWatchDate: new Date().toISOString().split('T')[0],
+                        lastSpinTime: null
+                    };
+                    await docRef.set(userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('Failed to load data from Firestore: ' + error.message);
+            }
+        }
+
+        // Save user data to Firestore
+        async function saveUserDataToFirestore() {
+            if (!currentUser) return;
+            try {
+                await db.collection('users').doc(currentUser.uid).set(userData, { merge: true });
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                alert('Failed to save data to Firestore: ' + error.message);
+            }
+        }
+
+        // ================= UI UPDATE =================
         function updateUI() {
-            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2);
-            document.getElementById('withdrawBalance').textContent = totalBalance.toFixed(2);
-            document.getElementById('totalPoints').textContent = totalPoints;
-            document.getElementById('totalReferrals').textContent = totalReferrals;
-            document.getElementById('rewardEarned').textContent = '$' + rewardEarned.toFixed(2);
-            document.getElementById('currentPlan').textContent = selectedPlan;
+            document.getElementById('totalBalance').textContent = userData.balance.toFixed(2);
+            document.getElementById('withdrawBalance').textContent = userData.balance.toFixed(2);
+            document.getElementById('totalPoints').textContent = userData.points;
+            document.getElementById('totalReferrals').textContent = userData.totalReferrals;
+            document.getElementById('rewardEarned').textContent = '$' + userData.rewardEarned.toFixed(2);
+            document.getElementById('currentPlan').textContent = userData.plan;
             document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
-            document.getElementById('simple-count').textContent = adWatchCounts.simple + '/25';
-            document.getElementById('pro-count').textContent = adWatchCounts.pro + '/25';
-            document.getElementById('sponsor-count').textContent = adWatchCounts.sponsor + '/25';
+            document.getElementById('simple-count').textContent = userData.adWatchCounts.simple + '/25';
+            document.getElementById('pro-count').textContent = userData.adWatchCounts.pro + '/25';
+            document.getElementById('sponsor-count').textContent = userData.adWatchCounts.sponsor + '/25';
             drawWheel();
             updateSpinCooldownUI();
-            saveUserData();
+            saveUserDataToFirestore();
         }
 
-        // Navigation
+        // ================= NAVIGATION =================
         function switchSection(sectionId) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
@@ -925,7 +1052,7 @@
             document.querySelector('.page-container').scrollTop = 0;
         }
 
-        // Copy referral link
+        // ================= REFERRAL =================
         function copyReferLink() {
             const link = document.getElementById('referLink').textContent;
             if (navigator.clipboard) {
@@ -941,7 +1068,7 @@
             }
         }
 
-        // Format time
+        // ================= FORMATTING =================
         function formatTime(seconds) {
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
@@ -949,17 +1076,19 @@
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // Update mining timer display
-        function updateMiningTimerDisplay() {
-            document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+        function formatCooldown(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // AD MODAL FUNCTIONS (Monetag SmartLink)
+        // ================= AD MODAL (SmartLink) =================
         function showMonetagAd(type, callback) {
             adCallback = callback;
             const modal = document.getElementById('adModal');
             modal.classList.add('active');
-            
             document.getElementById('adModalText').textContent = 'Click below to open the ad, then wait 10 seconds to claim reward.';
             const container = document.getElementById('adContainer');
             container.innerHTML = `
@@ -982,7 +1111,7 @@
                     }
                 }, 10000);
             } else {
-                alert('Monetag SmartLink URL set nahi hai. Code mein update karo.');
+                alert('Monetag SmartLink URL set nahi hai.');
             }
         }
 
@@ -995,74 +1124,69 @@
             }
         }
 
-        // WATCH ADS
+        // ================= SDK AD MODAL (Sponsored Ads) =================
+        function showSdkAd(callback) {
+            adCallback = callback;
+            const modal = document.getElementById('sdkAdModal');
+            modal.classList.add('active');
+            document.getElementById('sdkClaimBtn').disabled = true;
+            // Inject Monetag SDK ad script into container
+            const container = document.getElementById('sdkAdContainer');
+            container.innerHTML = ''; // clear previous
+            const script = document.createElement('script');
+            script.src = '//libtl.com/sdk.js';
+            script.setAttribute('data-zone', '11647720');
+            script.setAttribute('data-sdk', 'show_11647720');
+            container.appendChild(script);
+
+            // Enable claim button after 10 seconds
+            sdkAdTimer = setTimeout(() => {
+                document.getElementById('sdkClaimBtn').disabled = false;
+            }, 10000);
+        }
+
+        function closeSdkAdModal() {
+            clearTimeout(sdkAdTimer);
+            document.getElementById('sdkAdModal').classList.remove('active');
+            if (adCallback) {
+                const cb = adCallback;
+                adCallback = null;
+                cb();
+            }
+        }
+
+        // ================= WATCH ADS =================
         async function watchAd(type) {
-            if (adWatchCounts[type] >= 25) {
+            if (!currentUser) {
+                alert('Please login first');
+                showAuthModal();
+                return;
+            }
+            // Check daily limit
+            if (userData.adWatchCounts[type] >= 25) {
                 alert('Daily limit reached for this ad type.');
                 return;
             }
-            
+
             if (type === 'simple' || type === 'pro') {
                 showMonetagAd(type, () => {
-                    adWatchCounts[type]++;
-                    totalPoints += 25;
+                    userData.adWatchCounts[type]++;
+                    userData.points += 25;
                     updateUI();
                     alert('✅ You earned 25 points!');
                 });
             } else if (type === 'sponsor') {
-                showSponsoredAd(type, () => {
-                    adWatchCounts[type]++;
-                    totalPoints += 25;
+                // Use SDK ad instead of SmartLinks
+                showSdkAd(() => {
+                    userData.adWatchCounts.sponsor++;
+                    userData.points += 25;
                     updateUI();
                     alert('✅ You earned 25 points!');
                 });
             }
         }
 
-        // SPONSORED ADS (Monetag + Adsterra)
-        function showSponsoredAd(type, callback) {
-            adCallback = callback;
-            const modal = document.getElementById('adModal');
-            modal.classList.add('active');
-            
-            document.getElementById('adModalText').textContent = 'Please view both ads to get reward.';
-            const container = document.getElementById('adContainer');
-            container.innerHTML = `
-                <button class="btn-primary" onclick="openMonetagLink()">Open Ad 1 (Monetag)</button>
-                <button class="btn-primary" id="openAdsterraBtn" disabled style="margin-top:8px;" onclick="openAdsterraLink()">Open Ad 2 (Adsterra)</button>
-                <button class="btn-primary" id="claimRewardBtn" disabled style="margin-top:8px;">Claim Reward</button>
-            `;
-            document.getElementById('adCloseBtn').style.display = 'none';
-        }
-
-        function openAdsterraLink() {
-            if (adsterraSmartLink && adsterraSmartLink !== 'YOUR_ADSTERRA_SMARTLINK_URL') {
-                window.open(adsterraSmartLink, '_blank');
-                setTimeout(() => {
-                    const claimBtn = document.getElementById('claimRewardBtn');
-                    claimBtn.disabled = false;
-                    claimBtn.onclick = () => closeAdModal();
-                }, 10000);
-            } else {
-                alert('Adsterra SmartLink URL abhi set nahi hai. Please update code.');
-            }
-        }
-
-        // SPIN WHEEL - ALL SEGMENTS EQUAL + 1 HOUR COOLDOWN
-        const wheelSegments = [
-            { label: '5 pts', color: '#22c55e', type: 'points', value: 5, weight: 1 },
-            { label: '10 pts', color: '#f472b6', type: 'points', value: 10, weight: 1 },
-            { label: '50 pts', color: '#34d399', type: 'points', value: 50, weight: 1 },
-            { label: '100 pts', color: '#60a5fa', type: 'points', value: 100, weight: 1 },
-            { label: '250 pts', color: '#a855f7', type: 'points', value: 250, weight: 1 },
-            { label: '500 pts', color: '#f59e0b', type: 'points', value: 500, weight: 1 },
-            { label: '750 pts', color: '#f97316', type: 'points', value: 750, weight: 1 },
-            { label: '1000 pts', color: '#ef4444', type: 'points', value: 1000, weight: 1 }
-        ];
-
-        let wheelAngle = 0;
-        let spinning = false;
-
+        // ================= SPIN WHEEL =================
         function drawWheel() {
             const canvas = document.getElementById('wheelCanvas');
             const ctx = canvas.getContext('2d');
@@ -1116,30 +1240,43 @@
         }
 
         function spinWheel() {
+            if (!currentUser) {
+                alert('Please login first');
+                showAuthModal();
+                return;
+            }
             if (spinning) return;
             if (isSpinCooldownActive()) {
                 alert('Cooldown active! Please wait 1 hour after your last spin.');
                 return;
             }
+
+            // Show ad before spinning
+            showMonetagAd('spin', () => {
+                performSpin();
+            });
+        }
+
+        function performSpin() {
             spinning = true;
             document.getElementById('spinBtn').disabled = true;
-            document.getElementById('spinResult').textContent = ''; // clear previous result
-            document.getElementById('spinCooldown').textContent = ''; // clear cooldown text during spin
-            
+            document.getElementById('spinResult').textContent = '';
+            document.getElementById('spinCooldown').textContent = '';
+
             const fullRotations = 5 + Math.floor(Math.random() * 3);
             const targetAngle = wheelAngle + fullRotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
             const duration = 3000;
             const startTime = performance.now();
             const startAngle = wheelAngle;
             const deltaAngle = targetAngle - startAngle;
-            
+
             function animateSpin(now) {
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = 1 - Math.pow(1 - progress, 3);
                 wheelAngle = startAngle + deltaAngle * eased;
                 drawWheel();
-                
+
                 if (progress < 1) {
                     requestAnimationFrame(animateSpin);
                 } else {
@@ -1148,7 +1285,7 @@
                     const relativeAngle = ((pointerAngle - wheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
                     let cumulativeWeight = 0;
                     let segIndex = wheelSegments.length - 1;
-                    
+
                     for (let i = 0; i < wheelSegments.length; i++) {
                         const segWeight = wheelSegments[i].weight;
                         const segAngle = (segWeight / totalWeight) * 2 * Math.PI;
@@ -1158,44 +1295,35 @@
                         }
                         cumulativeWeight += segAngle;
                     }
-                    
+
                     const result = wheelSegments[segIndex];
-                    
-                    totalPoints += result.value;
-                    lastSpinTime = Date.now();
-                    updateUI(); // this will save and update cooldown display
+                    userData.points += result.value;
+                    userData.lastSpinTime = Date.now();
+                    updateUI();
                     document.getElementById('spinResult').textContent = `🎉 You won ${result.label}! (${result.value} points)`;
                     startSpinCooldown();
-                    
+
                     spinning = false;
                     document.getElementById('spinBtn').disabled = false;
                 }
             }
-            
+
             requestAnimationFrame(animateSpin);
         }
 
         function isSpinCooldownActive() {
-            if (!lastSpinTime) return false;
+            if (!userData.lastSpinTime) return false;
             const now = Date.now();
             const cooldownMs = 60 * 60 * 1000; // 1 hour
-            return (now - lastSpinTime) < cooldownMs;
+            return (now - userData.lastSpinTime) < cooldownMs;
         }
 
         function getSpinCooldownRemainingMs() {
-            if (!lastSpinTime) return 0;
+            if (!userData.lastSpinTime) return 0;
             const now = Date.now();
             const cooldownMs = 60 * 60 * 1000;
-            const elapsed = now - lastSpinTime;
+            const elapsed = now - userData.lastSpinTime;
             return Math.max(cooldownMs - elapsed, 0);
-        }
-
-        function formatCooldown(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         function updateSpinCooldownUI() {
@@ -1239,8 +1367,13 @@
             updateSpinCooldownUI();
         }
 
-        // MINING
+        // ================= MINING =================
         function startMining() {
+            if (!currentUser) {
+                alert('Please login first');
+                showAuthModal();
+                return;
+            }
             if (miningActive) {
                 alert('Mining is already running!');
                 return;
@@ -1252,18 +1385,18 @@
                 });
                 return;
             }
-            
+
             miningActive = true;
-            miningRemaining = Math.floor(3 * 3600 / planSpeed);
+            miningRemaining = Math.floor(3 * 3600 / userData.planSpeed);
             document.getElementById('startMiningBtn').textContent = '⏳ Mining in progress...';
             document.getElementById('startMiningBtn').disabled = true;
             updateMiningTimerDisplay();
-            
+
             miningTimerInterval = setInterval(() => {
                 if (miningRemaining <= 0) {
                     clearInterval(miningTimerInterval);
                     miningActive = false;
-                    totalBalance += 0.05;
+                    userData.balance += 0.05;
                     updateUI();
                     document.getElementById('startMiningBtn').textContent = 'Start Mining';
                     document.getElementById('startMiningBtn').disabled = false;
@@ -1277,23 +1410,32 @@
             }, 1000);
         }
 
+        function updateMiningTimerDisplay() {
+            document.getElementById('miningTimer').textContent = formatTime(miningRemaining);
+        }
+
         function selectPlan(planName, price, speedMultiplier) {
-            if (planName === selectedPlan) {
+            if (planName === userData.plan) {
                 alert('This plan is already selected');
                 return;
             }
-            selectedPlan = planName;
-            planSpeed = speedMultiplier;
+            userData.plan = planName;
+            userData.planSpeed = speedMultiplier;
             document.getElementById('currentPlan').textContent = planName;
             updateUI();
             alert(`${planName} plan activated - Speed ${speedMultiplier}x`);
             if (!miningActive) {
-                miningRemaining = Math.floor(3 * 3600 / planSpeed);
+                miningRemaining = Math.floor(3 * 3600 / userData.planSpeed);
                 updateMiningTimerDisplay();
             }
         }
 
         function withdraw() {
+            if (!currentUser) {
+                alert('Please login first');
+                showAuthModal();
+                return;
+            }
             const address = document.getElementById('usdtAddress').value.trim();
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             if (!address) {
@@ -1304,43 +1446,44 @@
                 alert('Withdrawal amount must be $25 only');
                 return;
             }
-            if (totalBalance < 25) {
+            if (userData.balance < 25) {
                 alert('Your balance is less than $25');
                 return;
             }
-            totalBalance -= 25;
+            userData.balance -= 25;
             updateUI();
             document.getElementById('usdtAddress').value = '';
             alert('✅ Withdrawal request submitted!');
         }
 
         function convertPoints() {
-            if (totalPoints < 100000) {
-                alert('You need at least 100,000 points to convert. Current points: ' + totalPoints);
+            if (userData.points < 100000) {
+                alert('You need at least 100,000 points to convert. Current points: ' + userData.points);
                 return;
             }
-            
-            const pointsToConvert = totalPoints;
+
+            const pointsToConvert = userData.points;
             const dollarsToAdd = pointsToConvert * 0.0001;
-            
+
             if (confirm(`Convert ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}?`)) {
-                totalPoints = 0;
-                totalBalance += dollarsToAdd;
+                userData.points = 0;
+                userData.balance += dollarsToAdd;
                 updateUI();
                 alert(`✅ Converted ${pointsToConvert} points to $${dollarsToAdd.toFixed(2)}!`);
             }
         }
 
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                alert('Logged out (Demo)');
-            }
-        }
-
-        // Initialize
+        // ================= INIT =================
         window.addEventListener('load', () => {
             drawWheel();
-            initTelegramUser();
+            // Telegram init (optional)
+            const tg = window.Telegram.WebApp;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                telegramUser = tg.initDataUnsafe.user;
+            }
+            tg.ready();
+            tg.expand();
+            // Auth state listener already set up, will handle UI
         });
     </script>
 </body>
