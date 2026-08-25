@@ -549,6 +549,167 @@
             color: #fbbf24;
             min-height: 20px;
         }
+
+        /* Professional Auth Modal */
+        .auth-modal-box {
+            background: linear-gradient(165deg, #1a2338 0%, #0f172a 100%);
+            border: 2px solid #2a3a5c;
+            border-radius: 28px;
+            padding: 32px 24px 28px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 80px #000000cc, 0 0 40px #3b82f644;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-modal-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, #3b82f622 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .auth-header { margin-bottom: 24px; position: relative; z-index: 1; }
+        .auth-logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 12px;
+            box-shadow: 0 0 30px #3b82f688;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px #3b82f688; }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px #3b82f6cc; }
+        }
+        .auth-header h3 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fbbf24;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .auth-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #0f172a;
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid #2a3a5c;
+            position: relative;
+            z-index: 1;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.3px;
+        }
+        .auth-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 15px #3b82f644;
+        }
+
+        .auth-form { position: relative; z-index: 1; }
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1.5px solid #2a3a5c;
+            background: #0f172a;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px #3b82f633;
+        }
+        .input-group input::placeholder {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px #fbbf2444;
+            margin-bottom: 12px;
+        }
+        .btn-auth:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px #fbbf2422;
+        }
+        .btn-auth:hover {
+            box-shadow: 0 6px 30px #fbbf2466;
+        }
+
+        .auth-terms {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        .auth-terms a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        .auth-terms a:hover {
+            text-decoration: underline;
+        }
     </style>
     <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -556,7 +717,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Monetag SDK (only for sponsored ads) -->
+    <!-- Monetag SDK (for sponsored ads only) -->
     <script src='//libtl.com/sdk.js' data-zone='11647720' data-sdk='show_11647720'></script>
 </head>
 <body>
@@ -809,16 +970,28 @@
         </div>
     </div>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (Professional) -->
     <div class="modal-overlay" id="authModal">
-        <div class="modal-box">
-            <h3 id="authTitle">Login / Sign Up</h3>
-            <div id="authForm">
-                <input type="email" id="authEmail" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:12px; border:1.5px solid #2a3a5c; background:#0f172a; color:white;">
-                <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:12px; border:1.5px solid #2a3a5c; background:#0f172a; color:white;">
-                <button class="btn-primary" onclick="loginUser()">Login</button>
-                <button class="btn-secondary" onclick="signupUser()" style="margin-top:8px;">Sign Up</button>
-                <p style="margin-top:8px; font-size:12px; color:var(--text-muted);">By continuing, you agree to our Terms</p>
+        <div class="auth-modal-box">
+            <div class="auth-header">
+                <div class="auth-logo">⚡</div>
+                <h3>Welcome to Earning Hub</h3>
+                <p>Login or create an account to continue</p>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab" id="signupTab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+            <div class="auth-form" id="authForm">
+                <div class="input-group">
+                    <input type="email" id="authEmail" placeholder="Email address" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="authPassword" placeholder="Password" required>
+                    <button class="toggle-password" onclick="togglePasswordVisibility()">👁️</button>
+                </div>
+                <button class="btn-auth" id="authSubmitBtn" onclick="handleAuthSubmit()">Login</button>
+                <p class="auth-terms">By continuing, you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a></p>
             </div>
         </div>
     </div>
@@ -829,7 +1002,7 @@
             <h3>📺 Watch Ad</h3>
             <p id="adModalText">Please view the ad to continue</p>
             <div id="adContainer">
-                <!-- Yahan dynamic buttons aayenge -->
+                <!-- Dynamic buttons -->
             </div>
             <button class="btn-secondary" id="adCloseBtn" onclick="closeAdModal()" style="display:none;">Close Ad</button>
         </div>
@@ -863,7 +1036,7 @@
         const db = firebase.firestore();
 
         // ================= GLOBAL STATE =================
-        let currentUser = null; // Firebase user
+        let currentUser = null;
         let userData = {
             balance: 0,
             points: 0,
@@ -885,11 +1058,11 @@
         let spinning = false;
         let wheelAngle = 0;
         let sdkAdTimer = null;
+        let authTab = 'login'; // 'login' or 'signup'
 
-        const monetagSmartLink = 'https://omg10.com/4/11642743'; // Monetag SmartLink
-        const adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL'; // Adsterra SmartLink (baad mein)
+        const monetagSmartLink = 'https://omg10.com/4/11642743';
+        const adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL';
 
-        // Wheel segments
         const wheelSegments = [
             { label: '5 pts', color: '#22c55e', value: 5, weight: 1 },
             { label: '10 pts', color: '#f472b6', value: 10, weight: 1 },
@@ -910,31 +1083,61 @@
             document.getElementById('authModal').classList.remove('active');
         }
 
-        async function loginUser() {
+        function switchAuthTab(tab) {
+            authTab = tab;
+            document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+            document.getElementById('signupTab').classList.toggle('active', tab === 'signup');
+            document.getElementById('authSubmitBtn').textContent = tab === 'login' ? 'Login' : 'Sign Up';
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('authPassword');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function handleAuthSubmit() {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            if (authTab === 'login') {
+                loginUser(email, password);
+            } else {
+                signupUser(email, password);
+            }
+        }
+
+        async function loginUser(email, password) {
+            if (!email || !password) {
+                email = document.getElementById('authEmail').value.trim();
+                password = document.getElementById('authPassword').value;
+            }
             if (!email || !password) {
                 alert('Please enter email and password');
                 return;
             }
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                // Auth state listener will handle the rest
+                // Auth state listener will handle UI
             } catch (error) {
                 alert('Login failed: ' + error.message);
             }
         }
 
-        async function signupUser() {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
+        async function signupUser(email, password) {
+            if (!email || !password) {
+                email = document.getElementById('authEmail').value.trim();
+                password = document.getElementById('authPassword').value;
+            }
             if (!email || !password) {
                 alert('Please enter email and password');
                 return;
             }
             try {
                 await auth.createUserWithEmailAndPassword(email, password);
-                // Auth state listener will handle the rest
+                // Auth state listener will handle UI
             } catch (error) {
                 alert('Signup failed: ' + error.message);
             }
@@ -943,7 +1146,7 @@
         async function logoutUser() {
             try {
                 await auth.signOut();
-                // Auth state listener will handle the rest
+                // Auth state listener will handle UI
             } catch (error) {
                 alert('Logout failed: ' + error.message);
             }
@@ -954,15 +1157,12 @@
             if (user) {
                 currentUser = user;
                 hideAuthModal();
-                // Update profile display
                 document.getElementById('profileName').textContent = user.email.split('@')[0];
                 document.getElementById('profileEmail').textContent = 'Email: ' + user.email;
-                // Load user data from Firestore
                 await loadUserDataFromFirestore(user.uid);
                 updateUI();
             } else {
                 currentUser = null;
-                // Reset to default
                 userData = {
                     balance: 0,
                     points: 0,
@@ -978,23 +1178,20 @@
             }
         });
 
-        // Load user data from Firestore
+        // ================= FIRESTORE DATA =================
         async function loadUserDataFromFirestore(uid) {
             try {
                 const docRef = db.collection('users').doc(uid);
                 const doc = await docRef.get();
                 if (doc.exists) {
                     userData = doc.data();
-                    // Ensure nested objects exist
                     if (!userData.adWatchCounts) userData.adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
-                    // Check if ad watch date is today, else reset counts
                     const today = new Date().toISOString().split('T')[0];
                     if (userData.adWatchDate !== today) {
                         userData.adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
                         userData.adWatchDate = today;
                     }
                 } else {
-                    // First time: create document
                     userData = {
                         balance: 0,
                         points: 0,
@@ -1014,7 +1211,6 @@
             }
         }
 
-        // Save user data to Firestore
         async function saveUserDataToFirestore() {
             if (!currentUser) return;
             try {
@@ -1130,16 +1326,14 @@
             const modal = document.getElementById('sdkAdModal');
             modal.classList.add('active');
             document.getElementById('sdkClaimBtn').disabled = true;
-            // Inject Monetag SDK ad script into container
             const container = document.getElementById('sdkAdContainer');
-            container.innerHTML = ''; // clear previous
+            container.innerHTML = '';
             const script = document.createElement('script');
             script.src = '//libtl.com/sdk.js';
             script.setAttribute('data-zone', '11647720');
             script.setAttribute('data-sdk', 'show_11647720');
             container.appendChild(script);
 
-            // Enable claim button after 10 seconds
             sdkAdTimer = setTimeout(() => {
                 document.getElementById('sdkClaimBtn').disabled = false;
             }, 10000);
@@ -1162,7 +1356,6 @@
                 showAuthModal();
                 return;
             }
-            // Check daily limit
             if (userData.adWatchCounts[type] >= 25) {
                 alert('Daily limit reached for this ad type.');
                 return;
@@ -1176,7 +1369,6 @@
                     alert('✅ You earned 25 points!');
                 });
             } else if (type === 'sponsor') {
-                // Use SDK ad instead of SmartLinks
                 showSdkAd(() => {
                     userData.adWatchCounts.sponsor++;
                     userData.points += 25;
@@ -1251,7 +1443,6 @@
                 return;
             }
 
-            // Show ad before spinning
             showMonetagAd('spin', () => {
                 performSpin();
             });
@@ -1314,7 +1505,7 @@
         function isSpinCooldownActive() {
             if (!userData.lastSpinTime) return false;
             const now = Date.now();
-            const cooldownMs = 60 * 60 * 1000; // 1 hour
+            const cooldownMs = 60 * 60 * 1000;
             return (now - userData.lastSpinTime) < cooldownMs;
         }
 
@@ -1476,14 +1667,14 @@
         // ================= INIT =================
         window.addEventListener('load', () => {
             drawWheel();
-            // Telegram init (optional)
             const tg = window.Telegram.WebApp;
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUser = tg.initDataUnsafe.user;
             }
-            tg.ready();
-            tg.expand();
-            // Auth state listener already set up, will handle UI
+            if (tg) {
+                tg.ready();
+                tg.expand();
+            }
         });
     </script>
 </body>
