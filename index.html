@@ -711,10 +711,10 @@
             text-decoration: underline;
         }
     </style>
-    <!-- Firebase SDKs (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDKs (compat) - Latest Version -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Monetag SDK (for sponsored ads only) -->
@@ -1035,6 +1035,11 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Firestore region explicit (asia-south1)
+        db.settings({ host: 'asia-south1-firestore.googleapis.com', ssl: true });
+
+        console.log('🔥 Firebase initialized successfully');
+
         // ================= GLOBAL STATE =================
         let currentUser = null;
         let userData = {
@@ -1058,7 +1063,7 @@
         let spinning = false;
         let wheelAngle = 0;
         let sdkAdTimer = null;
-        let authTab = 'login'; // 'login' or 'signup'
+        let authTab = 'login';
 
         const monetagSmartLink = 'https://omg10.com/4/11642743';
         const adsterraSmartLink = 'YOUR_ADSTERRA_SMARTLINK_URL';
@@ -1110,35 +1115,21 @@
         }
 
         async function loginUser(email, password) {
-            if (!email || !password) {
-                email = document.getElementById('authEmail').value.trim();
-                password = document.getElementById('authPassword').value;
-            }
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                // Auth state listener will handle UI
+                console.log('✅ Login successful');
             } catch (error) {
+                console.error('❌ Login error:', error);
                 alert('Login failed: ' + error.message);
             }
         }
 
         async function signupUser(email, password) {
-            if (!email || !password) {
-                email = document.getElementById('authEmail').value.trim();
-                password = document.getElementById('authPassword').value;
-            }
-            if (!email || !password) {
-                alert('Please enter email and password');
-                return;
-            }
             try {
                 await auth.createUserWithEmailAndPassword(email, password);
-                // Auth state listener will handle UI
+                console.log('✅ Signup successful');
             } catch (error) {
+                console.error('❌ Signup error:', error);
                 alert('Signup failed: ' + error.message);
             }
         }
@@ -1146,8 +1137,9 @@
         async function logoutUser() {
             try {
                 await auth.signOut();
-                // Auth state listener will handle UI
+                console.log('✅ Logout successful');
             } catch (error) {
+                console.error('❌ Logout error:', error);
                 alert('Logout failed: ' + error.message);
             }
         }
@@ -1159,6 +1151,7 @@
                 hideAuthModal();
                 document.getElementById('profileName').textContent = user.email.split('@')[0];
                 document.getElementById('profileEmail').textContent = 'Email: ' + user.email;
+                console.log('👤 User logged in:', user.email);
                 await loadUserDataFromFirestore(user.uid);
                 updateUI();
             } else {
@@ -1175,12 +1168,14 @@
                     lastSpinTime: null
                 };
                 showAuthModal();
+                console.log('👋 User logged out');
             }
         });
 
         // ================= FIRESTORE DATA =================
         async function loadUserDataFromFirestore(uid) {
             try {
+                console.log('📂 Loading user data from Firestore...');
                 const docRef = db.collection('users').doc(uid);
                 const doc = await docRef.get();
                 if (doc.exists) {
@@ -1191,7 +1186,9 @@
                         userData.adWatchCounts = { simple: 0, pro: 0, sponsor: 0 };
                         userData.adWatchDate = today;
                     }
+                    console.log('✅ User data loaded:', userData);
                 } else {
+                    console.log('📝 Creating new user document...');
                     userData = {
                         balance: 0,
                         points: 0,
@@ -1204,9 +1201,10 @@
                         lastSpinTime: null
                     };
                     await docRef.set(userData);
+                    console.log('✅ New user document created');
                 }
             } catch (error) {
-                console.error('Error loading user data:', error);
+                console.error('❌ Firestore error:', error);
                 alert('Failed to load data from Firestore: ' + error.message);
             }
         }
@@ -1215,9 +1213,10 @@
             if (!currentUser) return;
             try {
                 await db.collection('users').doc(currentUser.uid).set(userData, { merge: true });
+                console.log('💾 User data saved');
             } catch (error) {
-                console.error('Error saving user data:', error);
-                alert('Failed to save data to Firestore: ' + error.message);
+                console.error('❌ Save error:', error);
+                alert('Failed to save data: ' + error.message);
             }
         }
 
@@ -1667,9 +1666,11 @@
         // ================= INIT =================
         window.addEventListener('load', () => {
             drawWheel();
+            console.log('🚀 App loaded');
             const tg = window.Telegram.WebApp;
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUser = tg.initDataUnsafe.user;
+                console.log('📱 Telegram user detected:', telegramUser);
             }
             if (tg) {
                 tg.ready();
